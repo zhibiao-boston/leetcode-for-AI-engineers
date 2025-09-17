@@ -1,46 +1,122 @@
-# Getting Started with Create React App
+# LLM Coding for AI Engineer
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A beautiful, modern desktop web application for AI engineers to practice LLM coding challenges. Built with React, TypeScript, and Tailwind CSS.
 
-## Available Scripts
+## 🎯 Features
 
-In the project directory, you can run:
+- **Beautiful Dark Theme**: Sophisticated dark interface with purple accents
+- **Two-Panel Layout**: 40% question list, 60% question details
+- **Desktop Optimized**: Designed for 1200px+ width screens
+- **Question Categories**: Coding, phone, onsite interview questions
+- **Rich Content**: Detailed descriptions with tags and metadata
+- **Smooth Interactions**: Hover effects and transitions
 
-### `npm start`
+## 🚀 Quick Start
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+### Prerequisites
+- Node.js 16+ 
+- npm or yarn
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+### Installation
 
-### `npm test`
+1. Clone the repository:
+```bash
+git clone <your-repo-url>
+cd llm-coding
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+2. Install dependencies:
+```bash
+npm install
+```
 
-### `npm run build`
+3. Start the development server:
+```bash
+npm start
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+4. Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## 🛠️ Tech Stack
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+- **Frontend**: React 18 + TypeScript
+- **Styling**: Tailwind CSS 3.4
+- **Build Tool**: Create React App
+- **Icons**: Heroicons (SVG)
+- **Font**: Inter
 
-### `npm run eject`
+## 📋 Sample Questions
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+The application includes 8 sample AI/ML coding questions:
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+1. **Design Database** (Medium) - Database system design
+2. **Array Compression** (Medium) - Compression algorithms
+3. **Backend Assignment Interview** (Hard) - Backend system design
+4. **Basic Calculator** (Easy) - Mathematical expression evaluation
+5. **LLM Token Counter** (Medium) - Token counting for LLMs
+6. **Neural Network Optimizer** (Hard) - Neural network optimization
+7. **Prompt Engineering Framework** (Medium) - Prompt management system
+8. **Vector Database Query** (Hard) - Vector similarity search
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+## 🎨 Design
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+- **Color Palette**: Dark gray (#1a1a1a) background with purple (#8b5cf6) accents
+- **Typography**: Inter font family for clean readability
+- **Layout**: Fixed two-panel design optimized for desktop
+- **Interactions**: Smooth hover effects and selection states
 
-## Learn More
+## 📁 Project Structure
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+```
+src/
+├── components/
+│   ├── Header.tsx          # Top navigation header
+│   ├── QuestionList.tsx    # Left panel question list
+│   └── QuestionDetails.tsx # Right panel question details
+├── data/
+│   └── questions.ts        # Sample question data
+├── App.tsx                 # Main application component
+└── index.css              # Tailwind CSS imports
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## 🚀 Deployment
+
+Build the app for production:
+
+```bash
+npm run build
+```
+
+This builds the app for production to the `build` folder.
+
+## 📝 Development
+
+- **Start Development**: `npm start`
+- **Run Tests**: `npm test`
+- **Build Production**: `npm run build`
+- **Eject**: `npm run eject` (one-way operation)
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature-name`
+3. Commit changes: `git commit -m 'Add feature'`
+4. Push to branch: `git push origin feature-name`
+5. Submit a pull request
+
+## 📄 License
+
+This project is open source and available under the [MIT License](LICENSE).
+
+## 🎯 Future Enhancements
+
+- [ ] Search and filtering functionality
+- [ ] User authentication and progress tracking
+- [ ] More question categories and difficulty levels
+- [ ] Code editor integration
+- [ ] Performance optimizations
+- [ ] Mobile responsiveness
+
+---
+
+Built with ❤️ for AI engineers practicing LLM coding challenges.
