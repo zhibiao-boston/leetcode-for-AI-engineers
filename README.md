@@ -9,6 +9,7 @@ A beautiful, modern desktop web application for AI engineers to practice LLM cod
 - **Desktop Optimized**: Designed for 1200px+ width screens
 - **Question Categories**: Coding, phone, onsite interview questions
 - **Rich Content**: Detailed descriptions with tags and metadata
+- **Editable Tags**: Click-to-edit custom tags with smooth interactions
 - **Smooth Interactions**: Hover effects and transitions
 
 ## 🚀 Quick Start
@@ -72,7 +73,8 @@ src/
 ├── components/
 │   ├── Header.tsx          # Top navigation header
 │   ├── QuestionList.tsx    # Left panel question list
-│   └── QuestionDetails.tsx # Right panel question details
+│   ├── QuestionDetails.tsx # Right panel question details
+│   └── EditableTag.tsx     # Click-to-edit custom tag component
 ├── data/
 │   └── questions.ts        # Sample question data
 ├── App.tsx                 # Main application component
@@ -88,6 +90,25 @@ npm run build
 ```
 
 This builds the app for production to the `build` folder.
+
+## ✨ EditableTag Feature
+
+The application now includes an **EditableTag** component that allows users to add custom tags to questions:
+
+### Features
+- **Click to Edit**: Click on the tag to enter edit mode
+- **Keyboard Navigation**: 
+  - `Enter` to save changes
+  - `Escape` to cancel editing
+- **Auto-save**: Click outside the tag to save changes
+- **Character Limit**: 50 character maximum
+- **Visual States**: Hover effects and edit mode highlighting
+
+### Usage
+1. Navigate to any question in the right panel
+2. Scroll down to the "Tags" section
+3. Click on the "Add custom tag..." placeholder
+4. Type your custom tag and press Enter or click outside to save
 
 ## 📝 Development
 

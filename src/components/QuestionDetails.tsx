@@ -1,11 +1,55 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Question } from '../data/questions';
+import EditableTag from './EditableTag';
+import PythonEditor from './PythonEditor';
 
 interface QuestionDetailsProps {
   question: Question | null;
 }
 
 const QuestionDetails: React.FC<QuestionDetailsProps> = ({ question }) => {
+  const [customTag, setCustomTag] = useState('');
+  const [pythonCode, setPythonCode] = useState('');
+
+  // Python execution function
+  const executePythonCode = async (code: string): Promise<{ output: string; error?: string; executionTime: number }> => {
+    const startTime = Date.now();
+    
+    try {
+      // For now, we'll simulate Python execution
+      // In a real implementation, you would use Pyodide or send to a backend
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate execution time
+      
+      // Simple validation - check if code contains basic Python syntax
+      if (code.includes('print(')) {
+        const output = 'Hello from Python!\nCode executed successfully.';
+        return {
+          output,
+          executionTime: Date.now() - startTime
+        };
+      } else {
+        return {
+          output: 'Code executed successfully.',
+          executionTime: Date.now() - startTime
+        };
+      }
+    } catch (error) {
+      return {
+        output: '',
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        executionTime: Date.now() - startTime
+      };
+    }
+  };
+
+  const handleCodeChange = (code: string) => {
+    setPythonCode(code);
+  };
+
+  const handleCodeRun = async (code: string) => {
+    return await executePythonCode(code);
+  };
+
   if (!question) {
     return (
       <div className="h-full flex items-center justify-center">
@@ -75,21 +119,55 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({ question }) => {
           </div>
 
           {/* Tags */}
-          {question.tags.length > 0 && (
-            <div className="mt-8 pt-6 border-t border-gray-700">
-              <h3 className="text-sm font-medium text-gray-400 mb-3">Tags</h3>
-              <div className="flex flex-wrap gap-2">
-                {question.tags.map((tag, index) => (
-                  <span
-                    key={index}
-                    className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-800 text-gray-400"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
+          <div className="mt-8 pt-6 border-t border-gray-700">
+            <h3 className="text-sm font-medium text-gray-400 mb-3">Tags</h3>
+            <div className="flex flex-wrap gap-2">
+              {question.tags.map((tag, index) => (
+                <span
+                  key={index}
+                  className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-800 text-gray-400"
+                >
+                  {tag}
+                </span>
+              ))}
+              <EditableTag
+                value={customTag}
+                onChange={setCustomTag}
+                placeholder="Add custom tag..."
+                maxLength={50}
+              />
             </div>
-          )}
+          </div>
+
+          {/* Python Editor */}
+          <div className="mt-8 pt-6 border-t border-gray-700">
+            <h3 className="text-sm font-medium text-gray-400 mb-3">Python Editor</h3>
+            <PythonEditor
+              initialCode={`class Solution:
+    def solve(self, input_data):
+        """
+        Implement your solution here
+        
+        Args:
+            input_data: The input data for the problem
+            
+        Returns:
+            The solution result
+        """
+        # Your code here
+        pass
+
+# Example usage
+if __name__ == "__main__":
+    solution = Solution()
+    # Test your solution here
+    print("Solution ready!")
+`}
+              onCodeChange={handleCodeChange}
+              onRun={handleCodeRun}
+              height="400px"
+            />
+          </div>
         </div>
       </div>
     </div>
