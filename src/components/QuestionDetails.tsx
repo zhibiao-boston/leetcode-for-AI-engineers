@@ -9,7 +9,6 @@ interface QuestionDetailsProps {
 
 const QuestionDetails: React.FC<QuestionDetailsProps> = ({ question }) => {
   const [customTag, setCustomTag] = useState('');
-  const [pythonCode, setPythonCode] = useState('');
 
   // Python execution function
   const executePythonCode = async (code: string): Promise<{ output: string; error?: string; executionTime: number }> => {
@@ -43,7 +42,8 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({ question }) => {
   };
 
   const handleCodeChange = (code: string) => {
-    setPythonCode(code);
+    // Code change handler - can be extended for auto-save functionality
+    console.log('Code changed:', code.length, 'characters');
   };
 
   const handleCodeRun = async (code: string) => {

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Editor } from '@monaco-editor/react';
 
 interface PythonEditorProps {
