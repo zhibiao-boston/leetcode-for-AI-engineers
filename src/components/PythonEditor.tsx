@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Editor } from '@monaco-editor/react';
 
 interface PythonEditorProps {
@@ -6,6 +6,9 @@ interface PythonEditorProps {
   onCodeChange?: (code: string) => void;
   onRun?: (code: string) => Promise<RunResult>;
   height?: string;
+  showHeader?: boolean;
+  triggerRun?: number;
+  triggerClear?: number;
 }
 
 interface RunResult {
@@ -39,12 +42,30 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
   initialCode = DEFAULT_TEMPLATE,
   onCodeChange,
   onRun,
-  height = '400px'
+  height = '400px',
+  showHeader = true,
+  triggerRun = 0,
+  triggerClear = 0
 }) => {
   const [code, setCode] = useState(initialCode);
   const [output, setOutput] = useState('');
   const [isRunning, setIsRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [executionTime, setExecutionTime] = useState<number | null>(null);
+
+  // Handle external trigger for run
+  useEffect(() => {
+    if (triggerRun > 0) {
+      handleRun();
+    }
+  }, [triggerRun]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Handle external trigger for clear
+  useEffect(() => {
+    if (triggerClear > 0) {
+      handleClear();
+    }
+  }, [triggerClear]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleCodeChange = (value: string | undefined) => {
     const newCode = value || '';
@@ -58,10 +79,12 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
     setIsRunning(true);
     setError(null);
     setOutput('Running...');
+    setExecutionTime(null);
     
     try {
       const result = await onRun(code);
       setOutput(result.output);
+      setExecutionTime(result.executionTime);
       if (result.error) {
         setError(result.error);
       }
@@ -77,30 +100,32 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
     setCode(DEFAULT_TEMPLATE);
     setOutput('');
     setError(null);
+    setExecutionTime(null);
     onCodeChange?.(DEFAULT_TEMPLATE);
   };
 
   return (
     <div className="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
-      {/* Editor Header */}
-      <div className="bg-gray-900 px-4 py-2 border-b border-gray-700 flex justify-between items-center">
-        <span className="text-sm font-medium text-gray-400">Python Editor</span>
-        <div className="flex space-x-2">
-          <button
-            onClick={handleRun}
-            disabled={isRunning}
-            className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white px-4 py-2 rounded-md transition-colors duration-200 text-sm"
-          >
-            {isRunning ? 'Running...' : 'Run'}
-          </button>
-          <button
-            onClick={handleClear}
-            className="bg-gray-600 hover:bg-gray-500 text-white px-3 py-1 rounded-md transition-colors duration-200 text-sm"
-          >
-            Clear
-          </button>
+      {/* Editor Header - Conditional rendering */}
+      {showHeader && (
+        <div className="bg-gray-900 px-4 py-2 border-b border-gray-700 flex justify-end">
+          <div className="flex space-x-2">
+            <button
+              onClick={handleRun}
+              disabled={isRunning}
+              className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white px-4 py-2 rounded-md transition-colors duration-200 text-sm"
+            >
+              {isRunning ? 'Running...' : 'Run'}
+            </button>
+            <button
+              onClick={handleClear}
+              className="bg-gray-600 hover:bg-gray-500 text-white px-3 py-1 rounded-md transition-colors duration-200 text-sm"
+            >
+              Clear
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Code Editor */}
       <div style={{ height }}>
@@ -129,12 +154,19 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
       {/* Output Area */}
       {(output || error) && (
         <div className="bg-gray-900 border-t border-gray-700 p-4">
-          <h4 className="text-sm font-medium text-gray-400 mb-2">Output:</h4>
-          <pre className="text-sm font-mono text-gray-100 whitespace-pre-wrap">
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="text-sm font-medium text-gray-400">Output:</h4>
+            {executionTime && (
+              <span className="text-xs text-gray-500">
+                Executed in {executionTime}ms
+              </span>
+            )}
+          </div>
+          <pre className="text-sm font-mono text-gray-100 whitespace-pre-wrap bg-gray-800 p-3 rounded border">
             {error ? (
-              <span className="text-red-400">{error}</span>
+              <span className="text-red-400">❌ {error}</span>
             ) : (
-              output
+              <span className="text-green-400">✅ {output}</span>
             )}
           </pre>
         </div>
