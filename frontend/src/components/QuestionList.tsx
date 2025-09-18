@@ -1,0 +1,89 @@
+import React from 'react';
+import { Question } from '../data/questions';
+
+interface QuestionListProps {
+  questions: Question[];
+  selectedQuestion: Question | null;
+  onSelectQuestion: (question: Question) => void;
+}
+
+const QuestionList: React.FC<QuestionListProps> = ({ 
+  questions, 
+  selectedQuestion, 
+  onSelectQuestion 
+}) => {
+  return (
+    <div className="h-full flex flex-col">
+      {/* Filter Section */}
+      <div className="p-4 border-b border-gray-700">
+        <div className="flex items-center space-x-2 mb-2">
+          <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+            <span className="text-white text-xs font-bold">g</span>
+          </div>
+          <span className="text-sm text-gray-300">Updated within the last month</span>
+          <svg className="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+          </svg>
+        </div>
+      </div>
+
+      {/* Question Table */}
+      <div className="flex-1 overflow-y-auto">
+        <table className="w-full">
+          <thead className="bg-gray-800 sticky top-0">
+            <tr>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                Title
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                Categories
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                Last Reported
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-700">
+            {questions.map((question) => (
+              <tr
+                key={question.id}
+                onClick={() => onSelectQuestion(question)}
+                className={`cursor-pointer transition-colors duration-200 ${
+                  selectedQuestion?.id === question.id
+                    ? 'bg-blue-900/30 hover:bg-blue-900/40'
+                    : 'hover:bg-gray-800'
+                }`}
+              >
+                <td className="px-4 py-4">
+                  <div className="flex items-center space-x-2">
+                    <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                    </svg>
+                    <span className="text-sm font-medium text-white">{question.title}</span>
+                  </div>
+                </td>
+                <td className="px-4 py-4">
+                  <div className="flex flex-wrap gap-1">
+                    {question.categories.map((category, index) => (
+                      <span
+                        key={index}
+                        className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-700 text-gray-300"
+                      >
+                        {category}
+                      </span>
+                    ))}
+                  </div>
+                </td>
+                <td className="px-4 py-4">
+                  <span className="text-sm text-gray-400">{question.lastReported}</span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+export default QuestionList;

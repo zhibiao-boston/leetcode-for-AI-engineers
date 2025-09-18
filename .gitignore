@@ -110,5 +110,5 @@ backend/debug-test.js
 backend/test-api.js
 
 # Frontend specific
-llm-coding/build/
-llm-coding/.env
+frontend/build/
+frontend/.env

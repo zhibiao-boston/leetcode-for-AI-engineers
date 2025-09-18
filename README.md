@@ -1,50 +1,88 @@
-# LLM Coding for AI Engineer
+# LeetCode for AI Engineers
 
-A beautiful, modern desktop web application for AI engineers to practice LLM coding challenges. Built with React, TypeScript, and Tailwind CSS.
+A full-stack web application for AI engineers to practice coding challenges with authentication, Python code execution, and problem management. Built with React, TypeScript, Node.js, and PostgreSQL.
 
 ## 🎯 Features
 
+### Frontend (React/TypeScript)
 - **Beautiful Dark Theme**: Sophisticated dark interface with purple accents
 - **Two-Panel Layout**: 40% question list, 60% question details
 - **Desktop Optimized**: Designed for 1200px+ width screens
+- **Python Code Editor**: Monaco Editor with syntax highlighting and execution
+- **User Authentication**: Sign up, sign in, and user profile management
 - **Question Categories**: Coding, phone, onsite interview questions
 - **Rich Content**: Detailed descriptions with tags and metadata
-- **Editable Tags**: Click-to-edit custom tags with smooth interactions
 - **Smooth Interactions**: Hover effects and transitions
+
+### Backend (Node.js/TypeScript)
+- **JWT Authentication**: Secure user authentication with bcrypt password hashing
+- **RESTful API**: Complete API endpoints for users and problems
+- **PostgreSQL Database**: Robust data storage with proper schema design
+- **Security Middleware**: CORS, rate limiting, and input validation
+- **Mock Database**: Demo server for testing without live database
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 - Node.js 16+ 
 - npm or yarn
+- PostgreSQL (optional - mock database available)
 
 ### Installation
 
 1. Clone the repository:
 ```bash
-git clone <your-repo-url>
-cd llm-coding
+git clone https://github.com/zhibiao-boston/leetcode-for-AI-engineers.git
+cd leetcode-for-AI-engineers
 ```
 
-2. Install dependencies:
+2. Install backend dependencies:
 ```bash
+cd backend
 npm install
 ```
 
-3. Start the development server:
+3. Install frontend dependencies:
 ```bash
-npm start
+cd ../frontend
+npm install
 ```
 
-4. Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+### Running the Application
+
+1. Start the backend server (Terminal 1):
+```bash
+cd backend
+npm run dev
+```
+Backend runs on [http://localhost:5000](http://localhost:5000)
+
+2. Start the frontend development server (Terminal 2):
+```bash
+cd frontend
+npm start
+```
+Frontend runs on [http://localhost:3000](http://localhost:3000)
+
+3. Open [http://localhost:3000](http://localhost:3000) to view the application.
 
 ## 🛠️ Tech Stack
 
-- **Frontend**: React 18 + TypeScript
-- **Styling**: Tailwind CSS 3.4
-- **Build Tool**: Create React App
-- **Icons**: Heroicons (SVG)
-- **Font**: Inter
+### Frontend
+- **React 18** + TypeScript
+- **Tailwind CSS 3.4** for styling
+- **Monaco Editor** for Python code editing
+- **Create React App** for build tooling
+- **Heroicons** for SVG icons
+- **Inter** font family
+
+### Backend
+- **Node.js** + TypeScript
+- **Express.js** web framework
+- **PostgreSQL** database
+- **JWT** for authentication
+- **bcryptjs** for password hashing
+- **CORS** and security middleware
 
 ## 📋 Sample Questions
 
@@ -69,53 +107,101 @@ The application includes 8 sample AI/ML coding questions:
 ## 📁 Project Structure
 
 ```
-src/
-├── components/
-│   ├── Header.tsx          # Top navigation header
-│   ├── QuestionList.tsx    # Left panel question list
-│   ├── QuestionDetails.tsx # Right panel question details
-│   └── EditableTag.tsx     # Click-to-edit custom tag component
-├── data/
-│   └── questions.ts        # Sample question data
-├── App.tsx                 # Main application component
-└── index.css              # Tailwind CSS imports
+leetcode-for-AI-engineers/
+├── frontend/                    # React frontend application
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── AuthModal.tsx    # Authentication modal
+│   │   │   ├── Header.tsx       # Top navigation header
+│   │   │   ├── PythonEditor.tsx # Monaco code editor
+│   │   │   ├── QuestionList.tsx # Left panel question list
+│   │   │   ├── QuestionDetails.tsx # Right panel question details
+│   │   │   └── UserProfile.tsx  # User profile component
+│   │   ├── contexts/
+│   │   │   └── AuthContext.tsx  # Authentication context
+│   │   ├── data/
+│   │   │   └── questions.ts     # Sample question data
+│   │   └── App.tsx              # Main application component
+│   └── package.json
+├── backend/                      # Node.js backend API
+│   ├── src/
+│   │   ├── controllers/
+│   │   │   └── auth.controller.ts # Authentication controller
+│   │   ├── models/
+│   │   │   ├── User.ts          # User database model
+│   │   │   ├── Problem.ts       # Problem database model
+│   │   │   └── Solution.ts       # Solution database model
+│   │   ├── services/
+│   │   │   └── auth.service.ts  # Authentication service
+│   │   ├── middleware/
+│   │   │   └── auth.middleware.ts # JWT middleware
+│   │   ├── routes/
+│   │   │   └── auth.routes.ts    # Authentication routes
+│   │   └── config/
+│   │       ├── database.ts      # Database configuration
+│   │       └── index.ts         # App configuration
+│   ├── database/
+│   │   └── schema.sql           # PostgreSQL schema
+│   └── package.json
+└── prompt/                      # Development prompts
+    └── *.md                     # Feature development prompts
 ```
 
 ## 🚀 Deployment
 
-Build the app for production:
-
+### Frontend Production Build
 ```bash
+cd frontend
 npm run build
 ```
+This builds the frontend for production to the `frontend/build` folder.
 
-This builds the app for production to the `build` folder.
+### Backend Production Build
+```bash
+cd backend
+npm run build
+```
+This compiles TypeScript to JavaScript in the `backend/dist` folder.
 
-## ✨ EditableTag Feature
+### Production Start
+```bash
+cd backend
+npm start
+```
+This starts the production backend server.
 
-The application now includes an **EditableTag** component that allows users to add custom tags to questions:
+## ✨ Key Features
 
-### Features
-- **Click to Edit**: Click on the tag to enter edit mode
-- **Keyboard Navigation**: 
-  - `Enter` to save changes
-  - `Escape` to cancel editing
-- **Auto-save**: Click outside the tag to save changes
-- **Character Limit**: 50 character maximum
-- **Visual States**: Hover effects and edit mode highlighting
+### Python Code Editor
+- **Monaco Editor**: Professional code editor with Python syntax highlighting
+- **Code Execution**: Simulated Python execution with realistic output
+- **Error Handling**: Syntax error detection and user-friendly error messages
+- **Execution Time**: Performance tracking for code execution
 
-### Usage
-1. Navigate to any question in the right panel
-2. Scroll down to the "Tags" section
-3. Click on the "Add custom tag..." placeholder
-4. Type your custom tag and press Enter or click outside to save
+### User Authentication
+- **Sign Up/Sign In**: Complete user registration and login system
+- **JWT Tokens**: Secure authentication with JSON Web Tokens
+- **User Profiles**: User information display and management
+- **Password Security**: bcrypt password hashing for security
+
+### Question Management
+- **Rich Content**: Detailed problem descriptions with examples
+- **Difficulty Levels**: Easy, Medium, Hard categorization
+- **Categories**: Coding, phone, onsite interview questions
+- **Interactive UI**: Smooth animations and hover effects
 
 ## 📝 Development
 
-- **Start Development**: `npm start`
-- **Run Tests**: `npm test`
-- **Build Production**: `npm run build`
-- **Eject**: `npm run eject` (one-way operation)
+### Frontend Development
+- **Start Development**: `cd frontend && npm start`
+- **Run Tests**: `cd frontend && npm test`
+- **Build Production**: `cd frontend && npm run build`
+
+### Backend Development
+- **Start Development**: `cd backend && npm run dev`
+- **Build TypeScript**: `cd backend && npm run build`
+- **Run Tests**: `cd backend && npm test`
+- **Lint Code**: `cd backend && npm run lint`
 
 ## 🤝 Contributing
 
@@ -131,10 +217,14 @@ This project is open source and available under the [MIT License](LICENSE).
 
 ## 🎯 Future Enhancements
 
+- [x] User authentication and progress tracking
+- [x] Code editor integration (Monaco Editor)
+- [ ] Real Python execution (Pyodide integration)
+- [ ] Admin panel for problem management
+- [ ] User progress tracking and statistics
 - [ ] Search and filtering functionality
-- [ ] User authentication and progress tracking
 - [ ] More question categories and difficulty levels
-- [ ] Code editor integration
+- [ ] Code submission and evaluation system
 - [ ] Performance optimizations
 - [ ] Mobile responsiveness
 
