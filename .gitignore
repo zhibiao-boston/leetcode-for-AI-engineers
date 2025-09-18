@@ -1,12 +1,17 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
 # Dependencies
 node_modules/
 */node_modules/
+/.pnp
+.pnp.js
 
 # Production builds
 build/
 dist/
 */build/
 */dist/
+/build
 
 # Environment variables
 .env
@@ -14,6 +19,12 @@ dist/
 .env.development.local
 .env.test.local
 .env.production.local
+
+# Testing
+/coverage
+coverage/
+*.lcov
+.nyc_output
 
 # Logs
 npm-debug.log*
@@ -26,13 +37,6 @@ pids
 *.pid
 *.seed
 *.pid.lock
-
-# Coverage directory used by tools like istanbul
-coverage/
-*.lcov
-
-# nyc test coverage
-.nyc_output
 
 # Dependency directories
 jspm_packages/

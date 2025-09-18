@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Question } from '../data/questions';
-import EditableTag from './EditableTag';
 import PythonEditor from './PythonEditor';
 
 interface QuestionDetailsProps {
@@ -8,30 +7,67 @@ interface QuestionDetailsProps {
 }
 
 const QuestionDetails: React.FC<QuestionDetailsProps> = ({ question }) => {
-  const [customTag, setCustomTag] = useState('');
+  const [isRunning, setIsRunning] = useState(false);
+  const [triggerRun, setTriggerRun] = useState(0);
+  const [triggerClear, setTriggerClear] = useState(0);
 
   // Python execution function
   const executePythonCode = async (code: string): Promise<{ output: string; error?: string; executionTime: number }> => {
     const startTime = Date.now();
     
     try {
-      // For now, we'll simulate Python execution
-      // In a real implementation, you would use Pyodide or send to a backend
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate execution time
+      // Simulate realistic Python execution
+      await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 1000));
       
-      // Simple validation - check if code contains basic Python syntax
-      if (code.includes('print(')) {
-        const output = 'Hello from Python!\nCode executed successfully.';
-        return {
-          output,
-          executionTime: Date.now() - startTime
-        };
-      } else {
-        return {
-          output: 'Code executed successfully.',
-          executionTime: Date.now() - startTime
-        };
+      // Enhanced code analysis and execution simulation
+      let output = '';
+      let hasError = false;
+      
+      // Check for syntax errors
+      if (code.includes('def ') && !code.includes(':')) {
+        hasError = true;
+        output = '';
       }
+      
+      // Check for common Python patterns and simulate output
+      if (code.includes('print(')) {
+        // Extract print statements and simulate output
+        const printMatches = code.match(/print\([^)]+\)/g);
+        if (printMatches) {
+          output = printMatches.map(print => {
+            // Simulate print output - extract content between quotes
+            const content = print.replace(/print\(|\)/g, '').replace(/['"]/g, '');
+            return content;
+          }).join('\n');
+        }
+      }
+      
+      // Check for mathematical operations
+      if (code.includes('sum(') || code.includes('len(') || code.includes('max(')) {
+        output += '\nFunction executed successfully.';
+      }
+      
+      // Check for variable assignments
+      if (code.includes('=') && !code.includes('==')) {
+        output += '\nVariable assigned successfully.';
+      }
+      
+      // Check for loops
+      if (code.includes('for ') || code.includes('while ')) {
+        output += '\nLoop executed successfully.';
+      }
+      
+      // Default success message
+      if (!output && !hasError) {
+        output = 'Code executed successfully.\nNo output generated.';
+      }
+      
+      return {
+        output: output || 'Code executed successfully.',
+        error: hasError ? 'Syntax Error: Missing colon after function definition' : undefined,
+        executionTime: Date.now() - startTime
+      };
+>>>>>>> af13b53ed316492e25b2f85feb32354844a3adbd
     } catch (error) {
       return {
         output: '',
@@ -47,7 +83,25 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({ question }) => {
   };
 
   const handleCodeRun = async (code: string) => {
+<<<<<<< HEAD
     return await executePythonCode(code);
+=======
+    setIsRunning(true);
+    try {
+      const result = await executePythonCode(code);
+      return result;
+    } finally {
+      setIsRunning(false);
+    }
+  };
+
+  const handleRun = () => {
+    setTriggerRun(prev => prev + 1);
+  };
+
+  const handleClear = () => {
+    setTriggerClear(prev => prev + 1);
+>>>>>>> af13b53ed316492e25b2f85feb32354844a3adbd
   };
 
   if (!question) {
@@ -118,6 +172,7 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({ question }) => {
             </div>
           </div>
 
+<<<<<<< HEAD
           {/* Tags */}
           <div className="mt-8 pt-6 border-t border-gray-700">
             <h3 className="text-sm font-medium text-gray-400 mb-3">Tags</h3>
@@ -142,6 +197,31 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({ question }) => {
           {/* Python Editor */}
           <div className="mt-8 pt-6 border-t border-gray-700">
             <h3 className="text-sm font-medium text-gray-400 mb-3">Python Editor</h3>
+=======
+
+          {/* Python Editor */}
+          <div className="mt-8 pt-6 border-t border-gray-700">
+            {/* Header row with title and buttons */}
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="text-sm font-medium text-gray-400">Python Editor</h3>
+              <div className="flex space-x-2">
+                <button
+                  onClick={handleRun}
+                  disabled={isRunning}
+                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white px-4 py-2 rounded-md transition-colors duration-200 text-sm"
+                >
+                  {isRunning ? 'Running...' : 'Run'}
+                </button>
+                <button
+                  onClick={handleClear}
+                  className="bg-gray-600 hover:bg-gray-500 text-white px-3 py-1 rounded-md transition-colors duration-200 text-sm"
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+            
+>>>>>>> af13b53ed316492e25b2f85feb32354844a3adbd
             <PythonEditor
               initialCode={`class Solution:
     def solve(self, input_data):
@@ -166,6 +246,12 @@ if __name__ == "__main__":
               onCodeChange={handleCodeChange}
               onRun={handleCodeRun}
               height="400px"
+<<<<<<< HEAD
+=======
+              showHeader={false}
+              triggerRun={triggerRun}
+              triggerClear={triggerClear}
+>>>>>>> af13b53ed316492e25b2f85feb32354844a3adbd
             />
           </div>
         </div>
