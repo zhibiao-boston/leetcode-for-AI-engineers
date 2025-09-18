@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import AuthModal from './AuthModal';
 import UserProfile from './UserProfile';
 
 const Header: React.FC = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
 
   return (
@@ -26,6 +27,14 @@ const Header: React.FC = () => {
                 Interview Resources
               </button>
             </div>
+            {user && user.role === 'admin' && (
+              <Link
+                to="/admin"
+                className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+              >
+                Admin Dashboard
+              </Link>
+            )}
           </div>
 
           {/* Right side - Authentication */}

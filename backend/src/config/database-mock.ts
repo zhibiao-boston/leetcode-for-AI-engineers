@@ -13,9 +13,9 @@ export const mockConnection = {
 export const mockUsers = [
   {
     id: '1',
-    email: 'admin@leetcode.com',
-    password_hash: '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J8K8K8K8K',
-    name: 'Admin User',
+    email: 'ai_coding@gmail.com',
+    password_hash: '$2b$12$rmA357Z9ju2B59UjbYXJPuHrrYOkdnI7ysnJXsH5sMy/b5N.D5k4O',
+    name: 'AI Coding Admin',
     role: 'admin',
     created_at: new Date(),
     updated_at: new Date(),
