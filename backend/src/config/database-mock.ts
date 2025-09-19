@@ -1,3 +1,6 @@
+// Import generated problems
+import { generatedProblems } from './generated-problems';
+
 // Mock database configuration for testing without PostgreSQL
 export const mockConnection = {
   test: async (): Promise<boolean> => {
@@ -741,7 +744,9 @@ if __name__ == "__main__":
         isQuickTest: true
       }
     ]
-  }
+  },
+  // Add generated LLM problems
+  ...generatedProblems
 ];
 
 export const mockSubmissions = [

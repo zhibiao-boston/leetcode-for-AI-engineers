@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { ProblemModel } from '../models/Problem';
+import { SolutionController } from '../controllers/solution.controller';
+import { param } from 'express-validator';
 
 const router = Router();
 
@@ -54,5 +56,10 @@ router.get('/problems/:id', async (req, res) => {
     res.status(500).json({ error: 'Failed to retrieve problem' });
   }
 });
+
+// Public Solution Routes
+router.get('/problems/:problemId/solutions/published', [
+  param('problemId').notEmpty().withMessage('Invalid problem ID')
+], SolutionController.getPublishedSolutionsForProblem);
 
 export default router;

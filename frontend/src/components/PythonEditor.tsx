@@ -95,32 +95,73 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
     }
   }, [initialCode, code]);
 
-  // Manual layout handling for Monaco Editor
+  // Debounced layout handling for Monaco Editor to prevent ResizeObserver errors
   useEffect(() => {
     if (!editorInstance) return;
 
-    const resizeObserver = new ResizeObserver((entries) => {
-      // Manually trigger layout when container resizes
-      if (entries.length > 0) {
-        setTimeout(() => {
-          editorInstance.layout();
-        }, 0);
-      }
-    });
-
-    // Observe the editor container and its parent containers
-    const editorContainer = document.querySelector('.monaco-editor');
-    const parentContainer = editorContainer?.parentElement;
+    let timeoutId: NodeJS.Timeout;
     
-    if (editorContainer) {
-      resizeObserver.observe(editorContainer);
-    }
-    if (parentContainer) {
-      resizeObserver.observe(parentContainer);
+    const debouncedLayout = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        try {
+          if (editorInstance && typeof editorInstance.layout === 'function') {
+            editorInstance.layout();
+          }
+        } catch (error) {
+          // Silently handle layout errors
+          console.debug('Monaco layout error (non-critical):', error);
+        }
+      }, 100); // Debounce by 100ms to prevent rapid resize calls
+    };
+
+    // Use a more robust ResizeObserver with error handling
+    let resizeObserver: ResizeObserver | null = null;
+    
+    try {
+      resizeObserver = new ResizeObserver((entries) => {
+        try {
+          if (entries.length > 0) {
+            debouncedLayout();
+          }
+        } catch (error) {
+          // Silently handle ResizeObserver callback errors
+        }
+      });
+
+      // Observe the editor container and its parent containers
+      const editorContainer = document.querySelector('.monaco-editor');
+      const parentContainer = editorContainer?.parentElement;
+      
+      if (editorContainer) {
+        resizeObserver.observe(editorContainer);
+      }
+      if (parentContainer) {
+        resizeObserver.observe(parentContainer);
+      }
+    } catch (error) {
+      // Fallback to manual layout trigger if ResizeObserver fails
+      console.debug('ResizeObserver creation failed, using fallback');
+      
+      // Simple fallback - trigger layout on window resize
+      const handleResize = () => debouncedLayout();
+      window.addEventListener('resize', handleResize);
+      
+      return () => {
+        clearTimeout(timeoutId);
+        window.removeEventListener('resize', handleResize);
+      };
     }
 
     return () => {
-      resizeObserver.disconnect();
+      clearTimeout(timeoutId);
+      if (resizeObserver) {
+        try {
+          resizeObserver.disconnect();
+        } catch (error) {
+          // Silently handle disconnect errors
+        }
+      }
     };
   }, [editorInstance]);
 

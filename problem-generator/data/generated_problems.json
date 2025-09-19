@@ -1,0 +1,68 @@
+[
+  {
+    "id": "0e2ff27d-dccb-4f44-9390-9262da3fafec",
+    "topic": "self-attention",
+    "title": "LLM Implementation: Self-Attention",
+    "description": "This is a placeholder problem for self-attention. Use Cursor's AI to generate the actual problem.",
+    "difficulty": "medium",
+    "company": "OpenAI",
+    "categories": [
+      "coding",
+      "phone"
+    ],
+    "tags": [
+      "attention",
+      "transformer",
+      "implementation"
+    ],
+    "status": "generated",
+    "created_by": "1",
+    "created_at": "2025-09-19T09:38:30.079132",
+    "updated_at": "2025-09-19T09:38:30.079136",
+    "generated_at": "2025-09-19T09:38:30.079783"
+  },
+  {
+    "id": "207c7383-c2b8-48eb-b8af-9bc9478e333e",
+    "topic": "kv-cache",
+    "title": "LLM Implementation: Kv-Cache",
+    "description": "This is a placeholder problem for kv-cache. Use Cursor's AI to generate the actual problem.",
+    "difficulty": "medium",
+    "company": "OpenAI",
+    "categories": [
+      "coding",
+      "phone"
+    ],
+    "tags": [
+      "inference",
+      "optimization",
+      "memory"
+    ],
+    "status": "generated",
+    "created_by": "1",
+    "created_at": "2025-09-19T09:38:46.772804",
+    "updated_at": "2025-09-19T09:38:46.772807",
+    "generated_at": "2025-09-19T09:38:46.773261"
+  },
+  {
+    "id": "6731795c-f9f8-48bd-bf14-66985da810d2",
+    "topic": "greedy search",
+    "title": "LLM Implementation: Greedy Search",
+    "description": "This is a placeholder problem for greedy search. Use Cursor's AI to generate the actual problem.",
+    "difficulty": "easy",
+    "company": "OpenAI",
+    "categories": [
+      "coding",
+      "phone"
+    ],
+    "tags": [
+      "generation",
+      "search",
+      "decoding"
+    ],
+    "status": "generated",
+    "created_by": "1",
+    "created_at": "2025-09-19T09:42:22.278729",
+    "updated_at": "2025-09-19T09:42:22.278734",
+    "generated_at": "2025-09-19T09:42:22.279596"
+  }
+]

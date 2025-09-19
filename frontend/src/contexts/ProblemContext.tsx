@@ -1,6 +1,24 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Question } from '../data/questions';
 
+export interface AdminSolution {
+  id: string;
+  problem_id: string;
+  title: string;
+  description?: string;
+  code: string;
+  language: string;
+  complexity?: string;
+  explanation?: string;
+  time_complexity?: string;
+  space_complexity?: string;
+  is_published: boolean;
+  created_by?: string;
+  created_by_name?: string;
+  created_at: string | Date;
+  updated_at: string | Date;
+}
+
 interface ProblemContextType {
   problems: Question[];
   isLoading: boolean;
@@ -9,6 +27,10 @@ interface ProblemContextType {
   addProblem: (problem: Question) => void;
   updateProblem: (problem: Question) => void;
   removeProblem: (problemId: string) => void;
+  addSolutionToProblem: (problemId: string, solution: AdminSolution) => void;
+  updateSolutionInProblem: (problemId: string, solution: AdminSolution) => void;
+  removeSolutionFromProblem: (problemId: string, solutionId: string) => void;
+  getPublishedSolutionsForProblem: (problemId: string) => Promise<AdminSolution[]>;
 }
 
 const ProblemContext = createContext<ProblemContextType | undefined>(undefined);
@@ -39,7 +61,7 @@ export const ProblemProvider: React.FC<ProblemProviderProps> = ({ children }) =>
           company: problem.company || '',
           categories: problem.categories || [],
           tags: problem.tags || [],
-          lastReported: problem.lastReported || 'Unknown',
+          lastReported: problem.lastReported || 'Recently updated',
           examples: problem.examples || [],
           testCases: problem.testCases || [],
           template: problem.template || '',
@@ -74,6 +96,39 @@ export const ProblemProvider: React.FC<ProblemProviderProps> = ({ children }) =>
     setProblems(prev => prev.filter(p => p.id !== problemId));
   };
 
+  // Solution management methods
+  const addSolutionToProblem = (problemId: string, solution: AdminSolution) => {
+    // This would update the problem's solutions array in a real implementation
+    // For now, we'll just refresh the problems to get updated data
+    refreshProblems();
+  };
+
+  const updateSolutionInProblem = (problemId: string, solution: AdminSolution) => {
+    // This would update the specific solution in the problem's solutions array
+    // For now, we'll just refresh the problems to get updated data
+    refreshProblems();
+  };
+
+  const removeSolutionFromProblem = (problemId: string, solutionId: string) => {
+    // This would remove the specific solution from the problem's solutions array
+    // For now, we'll just refresh the problems to get updated data
+    refreshProblems();
+  };
+
+  const getPublishedSolutionsForProblem = async (problemId: string): Promise<AdminSolution[]> => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/problems/${problemId}/solutions/published`);
+      if (response.ok) {
+        const data = await response.json();
+        return data.data || [];
+      }
+      return [];
+    } catch (error) {
+      console.error('Error fetching published solutions:', error);
+      return [];
+    }
+  };
+
   useEffect(() => {
     fetchProblems();
   }, []);
@@ -85,7 +140,11 @@ export const ProblemProvider: React.FC<ProblemProviderProps> = ({ children }) =>
     refreshProblems,
     addProblem,
     updateProblem,
-    removeProblem
+    removeProblem,
+    addSolutionToProblem,
+    updateSolutionInProblem,
+    removeSolutionFromProblem,
+    getPublishedSolutionsForProblem
   };
 
   return (
