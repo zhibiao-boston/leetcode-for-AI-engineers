@@ -364,7 +364,7 @@ if __name__ == "__main__":
       <div className="flex-1 flex overflow-hidden">
         {/* Left Panel - Question Description */}
         <div 
-          className={`w-1/2 border-r overflow-hidden transition-colors duration-200 ${
+          className={`w-2/5 border-r overflow-hidden transition-colors duration-200 ${
             theme === 'dark' ? 'border-gray-700' : 'border-gray-200'
           }`}
         >
@@ -553,7 +553,7 @@ if __name__ == "__main__":
               </div>
 
               {/* Right Panel - Code Editor */}
-        <div className="w-1/2 flex flex-col">
+        <div className="w-3/5 flex flex-col">
           {/* Editor Header */}
           <div className={`border-b px-4 py-3 transition-colors duration-200 ${
             theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'
