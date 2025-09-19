@@ -160,26 +160,26 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
               className="px-3 py-1 text-sm bg-purple-600 hover:bg-purple-700 text-white rounded transition-colors duration-200"
             >
               {isQuestionListVisible ? 'Hide List' : 'Show List'}
-            </button>
-          </div>
+          </button>
+      </div>
 
           {/* Question Info */}
           <div className="flex items-center space-x-4 text-sm dark:text-gray-400 text-gray-600 mb-6">
-            <span className="flex items-center space-x-1">
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
-              </svg>
-              <span>{question.difficulty}</span>
-            </span>
-            {question.company && (
               <span className="flex items-center space-x-1">
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clipRule="evenodd" />
+                  <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
                 </svg>
-                <span>{question.company}</span>
+                <span>{question.difficulty}</span>
               </span>
-            )}
-            <span>{question.lastReported}</span>
+              {question.company && (
+                <span className="flex items-center space-x-1">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clipRule="evenodd" />
+                  </svg>
+                  <span>{question.company}</span>
+                </span>
+              )}
+              <span>{question.lastReported}</span>
           </div>
 
           {/* Categories */}
@@ -279,19 +279,19 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
         {/* Code Editor Header */}
         <div className="flex items-center justify-between px-6 py-3 border-b dark:border-gray-700 border-gray-200 dark:bg-gray-800 bg-gray-50">
           <h3 className="text-lg font-semibold dark:text-white text-gray-900">Code Editor</h3>
-          <div className="flex space-x-2">
-            <button
+              <div className="flex space-x-2">
+                <button
               onClick={executeAllTestCases}
               className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition-colors duration-200 text-sm font-medium"
             >
               Test Code
-            </button>
-          </div>
-        </div>
-
+                </button>
+              </div>
+            </div>
+            
         {/* Code Editor */}
         <div className="flex-1 p-0 min-h-0">
-          <PythonEditor
+            <PythonEditor
             initialCode={question.template || `class Solution:
     def solve(self, input_data):
         """
@@ -312,9 +312,9 @@ if __name__ == "__main__":
     # Test your solution here
     print("Solution ready!")
 `}
-            onCodeChange={handleCodeChange}
+              onCodeChange={handleCodeChange}
             height="100%"
-            showHeader={false}
+              showHeader={false}
           />
         </div>
 
