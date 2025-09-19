@@ -105,7 +105,7 @@ export class SubmissionModel {
     }
     
     // Sort by submitted_at descending
-    filteredSubmissions.sort((a, b) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime());
+    filteredSubmissions.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     
     // Apply pagination
     const paginatedSubmissions = filteredSubmissions.slice(offset, offset + limit);
@@ -142,7 +142,7 @@ export class SubmissionModel {
     }
     
     // Sort by submitted_at descending
-    filteredSubmissions.sort((a, b) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime());
+    filteredSubmissions.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     
     // Apply pagination
     const paginatedSubmissions = filteredSubmissions.slice(offset, offset + limit);
@@ -232,8 +232,8 @@ export class SubmissionModel {
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
     
     const recentSubmissions = mockSubmissions
-      .filter(s => new Date(s.submitted_at) > oneDayAgo)
-      .sort((a, b) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime())
+      .filter(s => new Date(s.created_at) > oneDayAgo)
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
       .slice(0, limit);
     
     return recentSubmissions.map(submission => ({

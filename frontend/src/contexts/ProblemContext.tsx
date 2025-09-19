@@ -39,6 +39,10 @@ export const ProblemProvider: React.FC<ProblemProviderProps> = ({ children }) =>
           company: problem.company || '',
           categories: problem.categories || [],
           tags: problem.tags || [],
+          lastReported: problem.lastReported || 'Unknown',
+          examples: problem.examples || [],
+          testCases: problem.testCases || [],
+          template: problem.template || '',
           status: problem.status
         }));
         

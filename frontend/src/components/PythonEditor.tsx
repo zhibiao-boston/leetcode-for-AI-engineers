@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Editor } from '@monaco-editor/react';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface PythonEditorProps {
   initialCode?: string;
@@ -51,6 +52,7 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
   externalCode,
   layoutTrigger = 0
 }) => {
+  const { theme } = useTheme();
   const [code, setCode] = useState(initialCode || DEFAULT_TEMPLATE);
   const [output, setOutput] = useState('');
   const [isRunning, setIsRunning] = useState(false);
@@ -219,10 +221,14 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
   };
 
   return (
-    <div className="bg-gray-800 w-full h-full">
+    <div className={`w-full h-full transition-colors duration-200 ${
+      theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'
+    }`}>
       {/* Editor Header - Conditional rendering */}
       {showHeader && (
-        <div className="bg-gray-900 px-4 py-2 border-b border-gray-700 flex items-center justify-end">
+        <div className={`px-4 py-2 border-b flex items-center justify-end transition-colors duration-200 ${
+          theme === 'dark' ? 'bg-gray-900 border-gray-700' : 'bg-gray-100 border-gray-200'
+        }`}>
           <div className="flex space-x-2">
             <button
               onClick={handleRun}
@@ -244,7 +250,9 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
       {/* Code Editor */}
       <div 
         style={{ height, width: '100%' }} 
-        className="bg-gray-800 w-full h-full"
+        className={`w-full h-full transition-colors duration-200 ${
+          theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'
+        }`}
         onClick={() => {
           if (editorInstance) {
             editorInstance.focus();
@@ -285,7 +293,7 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
               console.log('Editor blurred');
             });
           }}
-          theme="vs-dark"
+          theme={theme === 'dark' ? 'vs-dark' : 'vs'}
           options={{
             fontSize: 14,
             minimap: { enabled: false },
@@ -326,16 +334,24 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
 
       {/* Output Area */}
       {(output || error) && (
-        <div className="bg-gray-900 border-t border-gray-700 p-4">
+        <div className={`border-t p-4 transition-colors duration-200 ${
+          theme === 'dark' ? 'bg-gray-900 border-gray-700' : 'bg-gray-100 border-gray-200'
+        }`}>
           <div className="flex items-center justify-between mb-2">
-            <h4 className="text-sm font-medium text-gray-400">Output:</h4>
+            <h4 className={`text-sm font-medium transition-colors duration-200 ${
+              theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+            }`}>Output:</h4>
             {executionTime && (
-              <span className="text-xs text-gray-500">
+              <span className={`text-xs transition-colors duration-200 ${
+                theme === 'dark' ? 'text-gray-500' : 'text-gray-500'
+              }`}>
                 Executed in {executionTime}ms
               </span>
             )}
           </div>
-          <pre className="text-sm font-mono text-gray-100 whitespace-pre-wrap bg-gray-800 p-3 rounded border">
+          <pre className={`text-sm font-mono whitespace-pre-wrap p-3 rounded border transition-colors duration-200 ${
+            theme === 'dark' ? 'bg-gray-800 text-gray-100' : 'bg-gray-200 text-gray-800'
+          }`}>
             {error ? (
               <span className="text-red-400">❌ {error}</span>
             ) : (

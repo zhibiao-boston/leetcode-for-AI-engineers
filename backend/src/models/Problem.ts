@@ -16,6 +16,20 @@ export interface Problem {
   created_at: string | Date;
   updated_at: string | Date;
   published_at?: string | Date;
+  lastReported?: string;
+  examples?: {
+    input: string;
+    output: string;
+    explanation?: string;
+  }[];
+  testCases?: {
+    id: string;
+    input: string;
+    expectedOutput: string;
+    description?: string;
+    isQuickTest: boolean;
+  }[];
+  template?: string;
   solutions?: AdminSolution[];
 }
 
@@ -63,7 +77,11 @@ export class ProblemModel {
       created_by: created_by || '1',
       created_at: now,
       updated_at: now,
-      published_at: status === 'published' ? now : new Date()
+      published_at: status === 'published' ? now : new Date(),
+      lastReported: 'Just now',
+      examples: [],
+      testCases: [],
+      template: ''
     };
     
     // Add to mock data
