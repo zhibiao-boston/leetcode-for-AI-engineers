@@ -44,7 +44,7 @@ interface AdminSolution {
 
 const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
-  const { problems: contextProblems, addProblem, updateProblem, removeProblem } = useProblems();
+  const { addProblem, updateProblem, removeProblem } = useProblems();
   const { addNotification } = useNotifications();
   const { theme } = useTheme();
   const [problems, setProblems] = useState<Problem[]>([]);

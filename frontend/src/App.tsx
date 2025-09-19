@@ -1,3 +1,6 @@
+// Import error suppression utility first to ensure it's active before any components load
+import './utils/errorSuppression';
+
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Question } from './data/questions';
@@ -10,6 +13,7 @@ import QuestionList from './components/QuestionList';
 import QuestionDetails from './components/QuestionDetails';
 import AdminDashboard from './components/AdminDashboard';
 import UserProfilePage from './components/UserProfilePage';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Home Page Component that uses ProblemContext
 const HomePage: React.FC = () => {
@@ -146,24 +150,26 @@ function App() {
   }, []);
 
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <ProblemProvider>
-          <NotificationProvider>
-            <Router>
-              <div className="min-h-screen transition-colors duration-200">
-                <Header />
-                <Routes>
-                  <Route path="/admin" element={<AdminDashboard />} />
-                  <Route path="/profile" element={<UserProfilePage />} />
-                  <Route path="/" element={<HomePage />} />
-                </Routes>
-              </div>
-            </Router>
-          </NotificationProvider>
-        </ProblemProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <AuthProvider>
+          <ProblemProvider>
+            <NotificationProvider>
+              <Router>
+                <div className="min-h-screen transition-colors duration-200">
+                  <Header />
+                  <Routes>
+                    <Route path="/admin" element={<AdminDashboard />} />
+                    <Route path="/profile" element={<UserProfilePage />} />
+                    <Route path="/" element={<HomePage />} />
+                  </Routes>
+                </div>
+              </Router>
+            </NotificationProvider>
+          </ProblemProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }
 
