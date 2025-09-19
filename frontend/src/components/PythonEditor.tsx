@@ -392,6 +392,7 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
             readOnly: false,
             selectOnLineNumbers: true,
             roundedSelection: false,
+            padding: { top: 10, bottom: 10 },
             cursorStyle: 'line',
             contextmenu: true,
             mouseWheelZoom: true,
