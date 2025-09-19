@@ -586,7 +586,7 @@ if __name__ == "__main__":
                   
           <div className="flex-1 flex flex-col">
             {/* Code Editor */}
-            <div className="flex-1 w-full" style={{ width: '100%', minWidth: '100%', maxWidth: '100%', flex: '1 1 auto' }}>
+            <div className="flex-1 w-full overflow-hidden" style={{ width: '100%', minWidth: '100%', maxWidth: '100%', flex: '1 1 auto', display: 'flex', flexDirection: 'column' }}>
                       <PythonEditor
                 initialCode={getTemplateForQuestion(question, selectedLanguage)}
                         onCodeChange={handleCodeChange}

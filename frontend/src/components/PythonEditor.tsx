@@ -129,39 +129,6 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
     if (editorInstance) {
       const timeoutId = setTimeout(() => {
         editorInstance.layout();
-        
-        // Force the editor to take full width
-        const editorElement = editorInstance.getDomNode();
-        if (editorElement) {
-          editorElement.style.width = '100%';
-          editorElement.style.minWidth = '100%';
-          editorElement.style.maxWidth = '100%';
-          editorElement.style.flex = '1';
-          editorElement.style.display = 'flex';
-          editorElement.style.flexDirection = 'column';
-          
-          // Also set the parent container
-          const parentElement = editorElement.parentElement;
-          if (parentElement) {
-            parentElement.style.width = '100%';
-            parentElement.style.minWidth = '100%';
-            parentElement.style.maxWidth = '100%';
-            parentElement.style.flex = '1';
-          }
-          
-          // Set the root container as well
-          const rootElement = editorElement.closest('.w-full.h-full') as HTMLElement;
-          if (rootElement) {
-            rootElement.style.width = '100%';
-            rootElement.style.minWidth = '100%';
-            rootElement.style.maxWidth = '100%';
-          }
-        }
-        
-        // Force layout again after style changes
-        setTimeout(() => {
-          editorInstance.layout();
-        }, 50);
       }, 100);
       
       return () => clearTimeout(timeoutId);
@@ -299,7 +266,7 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
 
       {/* Code Editor */}
       <div 
-        style={{ height, width: '100%', minWidth: '100%', maxWidth: '100%' }} 
+        style={{ height, width: '100%' }} 
         className={`w-full h-full transition-colors duration-200 ${
           theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'
         }`}
@@ -332,39 +299,6 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
             setTimeout(() => {
               editor.focus();
               editor.layout();
-              
-              // Force the editor to take full width
-              const editorElement = editor.getDomNode();
-              if (editorElement) {
-                editorElement.style.width = '100%';
-                editorElement.style.minWidth = '100%';
-                editorElement.style.maxWidth = '100%';
-                editorElement.style.flex = '1';
-                editorElement.style.display = 'flex';
-                editorElement.style.flexDirection = 'column';
-                
-                // Also set the parent container
-                const parentElement = editorElement.parentElement;
-                if (parentElement) {
-                  parentElement.style.width = '100%';
-                  parentElement.style.minWidth = '100%';
-                  parentElement.style.maxWidth = '100%';
-                  parentElement.style.flex = '1';
-                }
-                
-                // Set the root container as well
-                const rootElement = editorElement.closest('.w-full.h-full') as HTMLElement;
-                if (rootElement) {
-                  rootElement.style.width = '100%';
-                  rootElement.style.minWidth = '100%';
-                  rootElement.style.maxWidth = '100%';
-                }
-              }
-              
-              // Force layout again after style changes
-              setTimeout(() => {
-                editor.layout();
-              }, 50);
             }, 100);
             
             // Prevent editor from losing focus during typing
@@ -385,6 +319,7 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
             tabSize: 4,
             insertSpaces: true,
             wordWrap: 'on',
+            wordWrapColumn: 120,
             lineNumbers: 'on',
             folding: true,
             lineDecorationsWidth: 0,
@@ -393,6 +328,15 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
             selectOnLineNumbers: true,
             roundedSelection: false,
             padding: { top: 10, bottom: 10 },
+            scrollbar: {
+              vertical: 'auto',
+              horizontal: 'auto',
+              useShadows: false,
+              verticalHasArrows: false,
+              horizontalHasArrows: false,
+              verticalScrollbarSize: 14,
+              horizontalScrollbarSize: 14
+            },
             cursorStyle: 'line',
             contextmenu: true,
             mouseWheelZoom: true,
