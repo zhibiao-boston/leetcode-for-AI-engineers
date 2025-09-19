@@ -35,6 +35,10 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
   const [loadingSubmissions, setLoadingSubmissions] = useState(false);
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
   const [leftPanelWidth, setLeftPanelWidth] = useState(35); // Percentage width for left panel (35% left, 65% right)
+  
+  // Calculate actual panel widths based on visibility
+  const actualLeftPanelWidth = isQuestionListVisible ? leftPanelWidth : 0;
+  const actualRightPanelWidth = isQuestionListVisible ? (100 - leftPanelWidth) : 100;
   const [isResizing, setIsResizing] = useState(false);
   const [layoutTrigger, setLayoutTrigger] = useState(0);
   
@@ -616,12 +620,13 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
       {/* Content */}
       <div className="flex-1 flex overflow-hidden resizable-container">
         {/* Left Panel - Description or Submissions */}
-        <div 
-          className={`border-r p-6 overflow-y-auto transition-colors duration-200 ${
-            theme === 'dark' ? 'border-gray-700' : 'border-gray-200'
-          }`}
-          style={{ width: `${leftPanelWidth}%` }}
-        >
+        {isQuestionListVisible && (
+          <div 
+            className={`border-r p-6 overflow-y-auto transition-colors duration-200 ${
+              theme === 'dark' ? 'border-gray-700' : 'border-gray-200'
+            }`}
+            style={{ width: `${actualLeftPanelWidth}%` }}
+          >
           {activeTab === 'description' ? (
               <div className="space-y-6">
               <div>
@@ -774,31 +779,124 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
               )}
             </div>
           )}
-        </div>
+          </div>
+        )}
 
         {/* Resizable Divider */}
-        <div
-          className={`w-1 cursor-col-resize flex-shrink-0 transition-colors duration-200 ${
-            theme === 'dark'
-              ? `bg-gray-600 hover:bg-gray-500 ${isResizing ? 'bg-gray-500' : ''}`
-              : `bg-gray-300 hover:bg-gray-400 ${isResizing ? 'bg-gray-400' : ''}`
-          }`}
-          onMouseDown={handleMouseDown}
-        >
-          <div className="w-full h-full flex items-center justify-center">
-            <div className={`w-1 h-8 rounded-full ${
-              theme === 'dark' ? 'bg-gray-400' : 'bg-gray-500'
-            }`}></div>
+        {isQuestionListVisible && (
+          <div
+            className={`w-1 cursor-col-resize flex-shrink-0 transition-colors duration-200 ${
+              theme === 'dark'
+                ? `bg-gray-600 hover:bg-gray-500 ${isResizing ? 'bg-gray-500' : ''}`
+                : `bg-gray-300 hover:bg-gray-400 ${isResizing ? 'bg-gray-400' : ''}`
+            }`}
+            onMouseDown={handleMouseDown}
+          >
+            <div className="w-full h-full flex items-center justify-center">
+              <div className={`w-1 h-8 rounded-full ${
+                theme === 'dark' ? 'bg-gray-400' : 'bg-gray-500'
+              }`}></div>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Right Panel - Code Editor */}
         <div 
           className="flex flex-col w-full"
-          style={{ width: `${100 - leftPanelWidth}%` }}
+          style={{ width: `${actualRightPanelWidth}%` }}
         >
           
           <div className="flex-1 flex flex-col w-full">
+            {/* Description Section - Always visible */}
+            {!isQuestionListVisible && question && (
+              <div className={`border-b p-6 transition-colors duration-200 ${
+                theme === 'dark' ? 'border-gray-700' : 'border-gray-200'
+              }`}>
+                <div className="space-y-6">
+                  <div>
+                    <h2 className={`text-lg font-semibold mb-3 transition-colors duration-200 ${
+                      theme === 'dark' ? 'text-white' : 'text-gray-900'
+                    }`}>Description</h2>
+                    <div className={`whitespace-pre-wrap leading-relaxed transition-colors duration-200 ${
+                      theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                    }`}>
+                      {question.description}
+                    </div>
+                  </div>
+
+                  {/* Examples */}
+                  {question.examples && question.examples.length > 0 && (
+                    <div>
+                      <h3 className={`text-md font-semibold mb-2 transition-colors duration-200 ${
+                        theme === 'dark' ? 'text-white' : 'text-gray-900'
+                      }`}>Examples</h3>
+                      <div className="grid grid-cols-1 gap-4">
+                        {question.examples.map((example: any, index: number) => (
+                          <div key={index} className={`rounded border p-3 ${theme === 'dark' ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-gray-50'}`}>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <div className={`text-sm mb-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Example {index + 1} Input:</div>
+                                <pre className={`text-sm font-mono p-2 rounded ${theme === 'dark' ? 'bg-gray-800 text-gray-100' : 'bg-gray-100 text-gray-800'}`}>{example.input}</pre>
+                              </div>
+                              <div>
+                                <div className={`text-sm mb-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Example {index + 1} Output:</div>
+                                <pre className={`text-sm font-mono p-2 rounded ${theme === 'dark' ? 'bg-gray-800 text-gray-100' : 'bg-gray-100 text-gray-800'}`}>{example.output}</pre>
+                              </div>
+                            </div>
+                            {example.explanation && (
+                              <div className={`mt-2 text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                                <strong>Explanation:</strong> {example.explanation}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Categories */}
+                  {question.categories && question.categories.length > 0 && (
+                    <div>
+                      <h3 className={`text-md font-semibold mb-2 transition-colors duration-200 ${
+                        theme === 'dark' ? 'text-white' : 'text-gray-900'
+                      }`}>Categories</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {question.categories.map((category: string, index: number) => (
+                          <span key={index} className={`px-3 py-1 rounded-full text-sm font-medium transition-colors duration-200 ${
+                            theme === 'dark' 
+                              ? 'bg-purple-600 text-purple-100' 
+                              : 'bg-purple-100 text-purple-800'
+                          }`}>
+                            {category}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tags */}
+                  {question.tags && question.tags.length > 0 && (
+                    <div>
+                      <h3 className={`text-md font-semibold mb-2 transition-colors duration-200 ${
+                        theme === 'dark' ? 'text-white' : 'text-gray-900'
+                      }`}>Tags</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {question.tags.map((tag: string, index: number) => (
+                          <span key={index} className={`px-2 py-1 rounded text-sm transition-colors duration-200 ${
+                            theme === 'dark' 
+                              ? 'bg-gray-700 text-gray-300' 
+                              : 'bg-gray-200 text-gray-700'
+                          }`}>
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Loaded submission indicator */}
             {selectedSubmission && (
               <div className="flex-shrink-0 p-4 bg-purple-900/30 border-b border-purple-500/30">
