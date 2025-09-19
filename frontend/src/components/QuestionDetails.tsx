@@ -272,6 +272,11 @@ if __name__ == "__main__":
     }
   }, [question, selectedLanguage, fetchSubmissions]);
 
+  // Force layout trigger when question list visibility changes
+  useEffect(() => {
+    setLayoutTrigger(prev => prev + 1);
+  }, [isQuestionListVisible]);
+
   useEffect(() => {
     setLayoutTrigger(prev => prev + 1);
   }, []);

@@ -176,7 +176,25 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
     if (editorInstance && layoutTrigger > 0) {
       setTimeout(() => {
         editorInstance.layout();
-      }, 50);
+        
+        // Force the editor to take full width when layout changes
+        const editorElement = editorInstance.getDomNode();
+        if (editorElement) {
+          editorElement.style.width = '100%';
+          editorElement.style.height = '100%';
+          
+          const parentElement = editorElement.parentElement;
+          if (parentElement) {
+            parentElement.style.width = '100%';
+            parentElement.style.height = '100%';
+          }
+        }
+        
+        // Second layout call after DOM changes
+        setTimeout(() => {
+          editorInstance.layout();
+        }, 50);
+      }, 200);
     }
   }, [editorInstance, layoutTrigger]);
 
