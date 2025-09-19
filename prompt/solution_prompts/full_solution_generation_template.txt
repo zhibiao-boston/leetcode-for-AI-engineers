@@ -1,0 +1,42 @@
+Generate a complete, production-ready Python solution for the following LLM implementation problem:
+
+**PROBLEM**: {GENERATED_PROBLEM}
+
+Requirements for Full Solution:
+- Write complete, production-quality Python code that can be executed directly
+- Include comprehensive comments explaining each step and LLM concept
+- Provide detailed explanation of the approach and algorithm
+- Include LLM implementation specific considerations and best practices
+- Analyze time and space complexity with detailed explanations
+- Use appropriate libraries (numpy, torch, etc.) for LLM implementations
+- Include optimization notes and trade-offs
+- Add proper error handling and input validation
+- Include example usage and test cases
+
+Output Format (JSON):
+{{
+  "title": "Complete Python Solution",
+  "code": "```python\n# Complete, executable Python code with detailed comments\n# Include imports, class definitions, functions, and example usage\n# Focus on LLM implementation concepts\n# Add comprehensive error handling\n# Include test cases and examples\n```",
+  "explanation": "comprehensive explanation of the approach, algorithm, and LLM concepts used",
+  "time_complexity": "O(n) - detailed explanation of why this complexity",
+  "space_complexity": "O(n) - detailed explanation of memory usage", 
+  "key_concepts": ["concept1", "concept2", "concept3"],
+  "optimization_notes": "performance optimization details and trade-offs",
+  "llm_specific_notes": "LLM implementation specific considerations and best practices",
+  "libraries_used": ["numpy", "torch", "other relevant libraries"],
+  "algorithm_explanation": "detailed explanation of the algorithm used",
+  "edge_cases_handled": ["case1", "case2"],
+  "testing_considerations": "how to test this solution with examples",
+  "example_usage": "practical example of how to use this solution"
+}}
+
+Guidelines:
+- Focus on production-quality Python code that could be used in real LLM systems
+- Include comprehensive error handling and edge case management
+- Explain the LLM implementation concepts and why this approach is effective
+- Provide detailed complexity analysis with explanations
+- Include practical optimization techniques
+- Use appropriate libraries for LLM implementations (numpy, torch, etc.)
+- Consider scalability and performance implications
+- Make the code executable with clear example usage
+- Include proper imports and dependencies

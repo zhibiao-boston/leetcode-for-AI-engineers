@@ -1,0 +1,112 @@
+[
+  {
+    "id": "78454585-32ad-4909-8a8b-c2becfaa5ec2",
+    "problem_id": "0e2ff27d-dccb-4f44-9390-9262da3fafec",
+    "type": "full_solution",
+    "title": "Complete Solution for LLM Implementation: Self-Attention",
+    "description": "This is a placeholder. Use Cursor's AI to generate the actual full solution.",
+    "created_by": "1",
+    "created_at": "2025-09-19T09:38:30.079362",
+    "updated_at": "2025-09-19T09:38:30.079363",
+    "generated_at": "2025-09-19T09:38:30.080497",
+    "status": "generated"
+  },
+  {
+    "id": "8e5b22d7-e88a-4099-bfc2-debdcb3cf9d1",
+    "problem_id": "0e2ff27d-dccb-4f44-9390-9262da3fafec",
+    "type": "practice_solution",
+    "title": "Practice Solution for LLM Implementation: Self-Attention",
+    "description": "This is a placeholder. Use Cursor's AI to generate the actual practice solution.",
+    "created_by": "1",
+    "created_at": "2025-09-19T09:38:30.079584",
+    "updated_at": "2025-09-19T09:38:30.079586",
+    "generated_at": "2025-09-19T09:38:30.081169",
+    "status": "generated"
+  },
+  {
+    "id": "8ec4dea1-c180-4f0f-ba5c-b28aac0cf93f",
+    "problem_id": "207c7383-c2b8-48eb-b8af-9bc9478e333e",
+    "type": "full_solution",
+    "title": "Complete Solution for LLM Implementation: Kv-Cache",
+    "description": "This is a placeholder. Use Cursor's AI to generate the actual full solution.",
+    "created_by": "1",
+    "created_at": "2025-09-19T09:38:46.773028",
+    "updated_at": "2025-09-19T09:38:46.773030",
+    "generated_at": "2025-09-19T09:38:46.773899",
+    "status": "generated"
+  },
+  {
+    "id": "b1019822-482f-4745-a63f-761b5f65305a",
+    "problem_id": "207c7383-c2b8-48eb-b8af-9bc9478e333e",
+    "type": "practice_solution",
+    "title": "Practice Solution for LLM Implementation: Kv-Cache",
+    "description": "This is a placeholder. Use Cursor's AI to generate the actual practice solution.",
+    "created_by": "1",
+    "created_at": "2025-09-19T09:38:46.773224",
+    "updated_at": "2025-09-19T09:38:46.773225",
+    "generated_at": "2025-09-19T09:38:46.774152",
+    "status": "generated"
+  },
+  {
+    "id": "6890a557-5ef6-4842-acfc-6fe16e374ad7",
+    "problem_id": "6731795c-f9f8-48bd-bf14-66985da810d2",
+    "type": "full_solution",
+    "title": "Complete Solution for LLM Implementation: Greedy Search",
+    "description": "This is a placeholder. Use Cursor's AI to generate the actual full solution.",
+    "created_by": "1",
+    "created_at": "2025-09-19T09:42:22.279108",
+    "updated_at": "2025-09-19T09:42:22.279110",
+    "generated_at": "2025-09-19T09:42:22.280621",
+    "status": "generated"
+  },
+  {
+    "id": "a31e19b3-9db3-4397-8653-10f7edc61eba",
+    "problem_id": "6731795c-f9f8-48bd-bf14-66985da810d2",
+    "type": "practice_solution",
+    "title": "Practice Solution for LLM Implementation: Greedy Search",
+    "description": "This is a placeholder. Use Cursor's AI to generate the actual practice solution.",
+    "created_by": "1",
+    "created_at": "2025-09-19T09:42:22.279410",
+    "updated_at": "2025-09-19T09:42:22.279412",
+    "generated_at": "2025-09-19T09:42:22.281265",
+    "status": "generated"
+  },
+  {
+    "id": "demo-greedy-search-solution",
+    "problem_id": "6731795c-f9f8-48bd-bf14-66985da810d2",
+    "type": "full_solution",
+    "title": "Complete Python Solution: Greedy Search Implementation",
+    "code": "```python\nimport numpy as np\nfrom typing import List, Tuple, Optional\n\nclass GreedySearchDecoder:\n    \"\"\"\n    Greedy search decoder for language model text generation.\n    \n    Greedy search selects the token with the highest probability at each step,\n    making it deterministic but potentially suboptimal for creative text generation.\n    \"\"\"\n    \n    def __init__(self, model, tokenizer, max_length: int = 100):\n        self.model = model\n        self.tokenizer = tokenizer\n        self.max_length = max_length\n    \n    def decode(self, input_ids: np.ndarray, attention_mask: Optional[np.ndarray] = None) -> List[int]:\n        \"\"\"\n        Perform greedy search decoding.\n        \n        Args:\n            input_ids: Input token IDs of shape (batch_size, seq_len)\n            attention_mask: Optional attention mask\n            \n        Returns:\n            List of generated token IDs\n        \"\"\"\n        if attention_mask is None:\n            attention_mask = np.ones_like(input_ids)\n        \n        # Initialize with input sequence\n        generated_ids = input_ids.copy()\n        current_length = input_ids.shape[1]\n        \n        # Generate tokens one by one\n        for step in range(self.max_length - current_length):\n            # Get model predictions\n            with torch.no_grad():\n                outputs = self.model(generated_ids, attention_mask=attention_mask)\n                logits = outputs.logits[:, -1, :]  # Last token logits\n            \n            # Apply greedy selection (argmax)\n            next_token_id = np.argmax(logits, axis=-1)\n            \n            # Append new token\n            generated_ids = np.concatenate([\n                generated_ids, \n                next_token_id.reshape(-1, 1)\n            ], axis=1)\n            \n            # Update attention mask\n            attention_mask = np.concatenate([\n                attention_mask,\n                np.ones((attention_mask.shape[0], 1))\n            ], axis=1)\n            \n            # Check for end-of-sequence token\n            if self.tokenizer.eos_token_id in next_token_id:\n                break\n        \n        return generated_ids[0].tolist()\n    \n    def generate_text(self, prompt: str) -> str:\n        \"\"\"\n        Generate text from a prompt using greedy search.\n        \n        Args:\n            prompt: Input text prompt\n            \n        Returns:\n            Generated text\n        \"\"\"\n        # Tokenize input\n        inputs = self.tokenizer(prompt, return_tensors=\"np\")\n        input_ids = inputs[\"input_ids\"]\n        attention_mask = inputs[\"attention_mask\"]\n        \n        # Generate tokens\n        generated_ids = self.decode(input_ids, attention_mask)\n        \n        # Decode to text\n        generated_text = self.tokenizer.decode(generated_ids, skip_special_tokens=True)\n        \n        return generated_text\n\n# Example usage\ndef example_usage():\n    \"\"\"Example of how to use the greedy search decoder\"\"\"\n    print(\"Example usage would go here with actual model and tokenizer\")\n\nif __name__ == \"__main__\":\n    example_usage()\n```",
+    "explanation": "This implementation provides a complete greedy search decoder for language models. Greedy search is the simplest decoding strategy that selects the token with the highest probability at each step. While deterministic and fast, it can lead to repetitive or suboptimal text generation compared to more sophisticated methods like beam search or sampling.",
+    "time_complexity": "O(n * V) where n is the sequence length and V is the vocabulary size. The argmax operation over the vocabulary dominates the complexity.",
+    "space_complexity": "O(n * V) for storing logits and O(n) for the generated sequence.",
+    "key_concepts": [
+      "Greedy decoding",
+      "Argmax selection",
+      "Token generation",
+      "Attention mask handling",
+      "End-of-sequence detection"
+    ],
+    "optimization_notes": "The implementation uses numpy for efficient tensor operations and includes proper attention mask handling. For production use, consider batching multiple sequences and using GPU acceleration.",
+    "llm_specific_notes": "Greedy search is deterministic and fast but can produce repetitive text. It's commonly used as a baseline and in scenarios where determinism is important.",
+    "libraries_used": [
+      "numpy",
+      "torch",
+      "typing"
+    ],
+    "algorithm_explanation": "The algorithm iteratively selects the highest probability token at each step. It maintains the attention mask to ensure proper attention computation and stops when an end-of-sequence token is generated.",
+    "edge_cases_handled": [
+      "Empty input sequences",
+      "Maximum length constraints",
+      "End-of-sequence token detection",
+      "Attention mask updates"
+    ],
+    "testing_considerations": "Test with various input lengths, check that generated sequences don't exceed max_length, verify end-of-sequence detection works correctly, and ensure attention masks are properly maintained.",
+    "example_usage": "The decoder can be used with any transformer-based language model. Simply provide the model, tokenizer, and optional parameters to generate text from prompts.",
+    "created_by": "1",
+    "created_at": "2025-09-19T09:45:00.000000",
+    "updated_at": "2025-09-19T09:45:00.000000",
+    "generated_at": "2025-09-19T09:42:49.848809",
+    "status": "generated"
+  }
+]

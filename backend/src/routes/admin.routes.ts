@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { ProblemController } from '../controllers/problem.controller';
-import { AdminSolutionController } from '../controllers/admin-solution.controller';
+import { SolutionController } from '../controllers/solution.controller';
 import { authenticateToken, requireAdmin } from '../middleware/auth.middleware';
 import { body, param } from 'express-validator';
 
@@ -43,34 +43,36 @@ router.patch('/problems/:id/status', [
   body('status').isIn(['draft', 'published', 'archived']).withMessage('Invalid status')
 ], ProblemController.updateProblemStatus);
 
-// Admin Solution Management Routes
-router.get('/problems/:problemId/solutions', AdminSolutionController.getSolutionsByProblem);
+// Solution Routes for Admin
 router.post('/problems/:problemId/solutions', [
-  param('problemId').isUUID().withMessage('Invalid problem ID'),
-  body('title').notEmpty().withMessage('Title is required'),
-  body('description').optional().isString(),
-  body('code').notEmpty().withMessage('Code is required'),
+  param('problemId').notEmpty().withMessage('Invalid problem ID'),
   body('language').notEmpty().withMessage('Language is required'),
-  body('complexity').optional().isString(),
-  body('explanation').optional().isString(),
-  body('time_complexity').optional().isString(),
-  body('space_complexity').optional().isString()
-], AdminSolutionController.createSolution);
-
-router.put('/solutions/:id', [
-  param('id').isUUID().withMessage('Invalid solution ID'),
-  body('title').optional().notEmpty(),
+  body('code').notEmpty().withMessage('Code is required'),
   body('description').optional().isString(),
-  body('code').optional().notEmpty(),
-  body('language').optional().notEmpty(),
-  body('complexity').optional().isString(),
-  body('explanation').optional().isString(),
-  body('time_complexity').optional().isString(),
-  body('space_complexity').optional().isString()
-], AdminSolutionController.updateSolution);
+  body('is_published').optional().isBoolean()
+], SolutionController.createSolution);
 
-router.delete('/solutions/:id', [
-  param('id').isUUID().withMessage('Invalid solution ID')
-], AdminSolutionController.deleteSolution);
+router.get('/problems/:problemId/solutions', [
+  param('problemId').notEmpty().withMessage('Invalid problem ID')
+], SolutionController.getAllSolutionsForProblem);
+
+router.get('/problems/:problemId/solutions/:solutionId', [
+  param('problemId').notEmpty().withMessage('Invalid problem ID'),
+  param('solutionId').notEmpty().withMessage('Invalid solution ID')
+], SolutionController.getSolutionById);
+
+router.put('/problems/:problemId/solutions/:solutionId', [
+  param('problemId').notEmpty().withMessage('Invalid problem ID'),
+  param('solutionId').notEmpty().withMessage('Invalid solution ID'),
+  body('language').optional().notEmpty().withMessage('Language cannot be empty'),
+  body('code').optional().notEmpty().withMessage('Code cannot be empty'),
+  body('description').optional().isString(),
+  body('is_published').optional().isBoolean()
+], SolutionController.updateSolution);
+
+router.delete('/problems/:problemId/solutions/:solutionId', [
+  param('problemId').notEmpty().withMessage('Invalid problem ID'),
+  param('solutionId').notEmpty().withMessage('Invalid solution ID')
+], SolutionController.deleteSolution);
 
 export default router;

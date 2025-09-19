@@ -1,0 +1,40 @@
+Generate a practice version of the Python solution for the following LLM implementation problem:
+
+**PROBLEM**: {GENERATED_PROBLEM}
+
+Requirements for Practice Solution:
+- Provide a Python skeleton with key functions and structure
+- Include helpful hints without giving away the complete solution
+- Add TODO comments for students to fill in
+- Focus on learning objectives and key LLM concepts
+- Make it challenging but achievable for practice
+- Include step-by-step guidance
+- Provide executable Python code structure with placeholders
+
+Output Format (JSON):
+{{
+  "title": "Practice Python Solution",
+  "code": "```python\n# Python skeleton with TODOs and hints\n# Include imports and basic structure\n# Add TODO comments for key implementation points\n# Include helpful hints in comments\n# Provide example usage structure\n```",
+  "hints": ["hint1", "hint2", "hint3", "hint4"],
+  "learning_objectives": ["objective1", "objective2", "objective3"],
+  "difficulty_level": "beginner|intermediate|advanced",
+  "step_by_step_guide": "brief guide on how to approach this LLM implementation problem",
+  "todo_items": ["TODO: implement function1", "TODO: add error handling", "TODO: implement LLM concept"],
+  "key_concepts_to_learn": ["concept1", "concept2", "concept3"],
+  "common_mistakes": ["mistake1", "mistake2"],
+  "testing_hints": "how to test your solution with examples",
+  "resources": ["resource1", "resource2"],
+  "expected_output": "what the solution should produce when completed"
+}}
+
+Guidelines:
+- Create a learning-focused Python version that guides without solving
+- Include strategic hints that lead students to the solution
+- Add TODO comments for key implementation points
+- Provide learning objectives to focus the practice
+- Include common mistakes to help students avoid pitfalls
+- Make the Python code structure clear but leave implementation details
+- Include resources for further learning
+- Balance challenge with achievability
+- Focus on LLM implementation concepts
+- Provide executable Python skeleton with proper imports
