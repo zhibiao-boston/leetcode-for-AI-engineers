@@ -410,7 +410,8 @@ if __name__ == "__main__":
       <div className="flex-1 flex overflow-hidden">
         {/* Left Panel - Question Description */}
         <div 
-          className={`${isQuestionListVisible ? 'w-1/3' : 'w-1/4'} border-r overflow-hidden transition-colors duration-200 ${
+          style={{ width: '30%' }}
+          className={`border-r overflow-hidden transition-colors duration-200 ${
             theme === 'dark' ? 'border-gray-700' : 'border-gray-200'
           }`}
         >
@@ -495,11 +496,11 @@ if __name__ == "__main__":
                         <div className="grid grid-cols-2 gap-4">
                           <div>
                             <div className={`text-sm mb-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Example {index + 1} Input:</div>
-                            <pre className={`text-sm font-mono p-2 rounded ${theme === 'dark' ? 'bg-gray-800 text-gray-100' : 'bg-gray-100 text-gray-800'}`}>{example.input}</pre>
+                            <pre className={`text-sm font-mono p-2 rounded whitespace-pre-wrap break-all overflow-x-auto ${theme === 'dark' ? 'bg-gray-800 text-gray-100' : 'bg-gray-100 text-gray-800'}`}>{example.input}</pre>
                           </div>
                           <div>
                             <div className={`text-sm mb-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Example {index + 1} Output:</div>
-                            <pre className={`text-sm font-mono p-2 rounded ${theme === 'dark' ? 'bg-gray-800 text-gray-100' : 'bg-gray-100 text-gray-800'}`}>{example.output}</pre>
+                            <pre className={`text-sm font-mono p-2 rounded whitespace-pre-wrap break-all overflow-x-auto ${theme === 'dark' ? 'bg-gray-800 text-gray-100' : 'bg-gray-100 text-gray-800'}`}>{example.output}</pre>
                           </div>
                         </div>
                         {example.explanation && (
@@ -769,7 +770,7 @@ if __name__ == "__main__":
               </div>
 
               {/* Right Panel - Code Editor */}
-        <div className={`${isQuestionListVisible ? 'w-2/3' : 'w-3/4'} flex flex-col`}>
+        <div className="flex flex-col" style={{ width: '70%' }}>
           {/* Editor Header */}
           <div className={`border-b px-4 py-3 transition-colors duration-200 ${
             theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'
