@@ -54,7 +54,7 @@ export class ProblemController {
 
       const problemData = {
         ...req.body,
-        created_by: req.user?.id,
+        created_by: req.user?.userId,
         status: req.body.status || 'draft'
       };
 
@@ -102,12 +102,7 @@ export class ProblemController {
     try {
       const { id } = req.params;
       
-      const deleted = await ProblemModel.delete(id);
-      
-      if (!deleted) {
-        res.status(404).json({ error: 'Problem not found' });
-        return;
-      }
+      await ProblemModel.delete(id);
 
       res.json({
         message: 'Problem deleted successfully'

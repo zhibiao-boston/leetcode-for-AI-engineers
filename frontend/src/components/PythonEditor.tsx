@@ -9,6 +9,7 @@ interface PythonEditorProps {
   showHeader?: boolean;
   triggerRun?: number;
   triggerClear?: number;
+  externalCode?: string; // New prop for external code updates
 }
 
 interface RunResult {
@@ -45,7 +46,8 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
   height = '400px',
   showHeader = true,
   triggerRun = 0,
-  triggerClear = 0
+  triggerClear = 0,
+  externalCode
 }) => {
   const [code, setCode] = useState(initialCode);
   const [output, setOutput] = useState('');
@@ -66,6 +68,14 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
       handleClear();
     }
   }, [triggerClear]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Handle external code updates
+  useEffect(() => {
+    if (externalCode && externalCode !== code) {
+      setCode(externalCode);
+      onCodeChange?.(externalCode);
+    }
+  }, [externalCode, code, onCodeChange]);
 
   const handleCodeChange = (value: string | undefined) => {
     const newCode = value || '';

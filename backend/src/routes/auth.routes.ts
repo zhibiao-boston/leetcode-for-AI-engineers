@@ -5,7 +5,7 @@ import { authenticateToken, createRateLimit } from '../middleware/auth.middlewar
 const router = Router();
 
 // Rate limiting for auth routes
-const authRateLimit = createRateLimit(15 * 60 * 1000, 5); // 5 requests per 15 minutes
+const authRateLimit = createRateLimit(15 * 60 * 1000, 50); // 50 requests per 15 minutes
 
 // Public routes
 router.post('/register', 

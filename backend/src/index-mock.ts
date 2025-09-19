@@ -9,6 +9,7 @@ import { errorHandler, notFound, corsOptions } from './middleware/auth.middlewar
 
 // Import routes
 import authRoutes from './routes/auth.routes';
+import submissionRoutes from './routes/submission.routes';
 
 const app = express();
 
@@ -69,6 +70,7 @@ app.get('/test', (req, res) => {
 
 // API routes
 app.use('/api/auth', authRoutes);
+app.use('/api/submissions', submissionRoutes);
 
 // 404 handler
 app.use(notFound);
@@ -112,6 +114,7 @@ const startServer = async () => {
       console.log(`🔗 Health check: http://localhost:${config.port}/health`);
       console.log(`🧪 Test endpoint: http://localhost:${config.port}/test`);
       console.log(`🔐 Auth API: http://localhost:${config.port}/api/auth`);
+      console.log(`📝 Submission API: http://localhost:${config.port}/api/submissions`);
       console.log(`📝 Note: Running with MOCK DATABASE for testing`);
     });
 

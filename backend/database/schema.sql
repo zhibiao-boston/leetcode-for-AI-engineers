@@ -47,6 +47,23 @@ CREATE TABLE solutions (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- User Submissions Table (for submission history)
+CREATE TABLE submissions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    problem_id UUID NOT NULL REFERENCES problems(id) ON DELETE CASCADE,
+    code TEXT NOT NULL,
+    language VARCHAR(20) NOT NULL,
+    status VARCHAR(50) NOT NULL CHECK (status IN ('Accepted', 'Wrong Answer', 'Time Limit Exceeded', 'Runtime Error', 'Compile Error', 'Memory Limit Exceeded', 'Output Limit Exceeded', 'Presentation Error')),
+    execution_time INTEGER,
+    memory_usage DECIMAL(10,2),
+    test_cases_passed INTEGER DEFAULT 0,
+    total_test_cases INTEGER DEFAULT 0,
+    submitted_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Admin Solutions Table
 CREATE TABLE admin_solutions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -79,6 +96,11 @@ CREATE INDEX idx_solutions_problem_id ON solutions(problem_id);
 CREATE INDEX idx_solutions_status ON solutions(status);
 CREATE INDEX idx_solutions_created_at ON solutions(created_at);
 
+CREATE INDEX idx_submissions_user_id ON submissions(user_id);
+CREATE INDEX idx_submissions_problem_id ON submissions(problem_id);
+CREATE INDEX idx_submissions_submitted_at ON submissions(submitted_at DESC);
+CREATE INDEX idx_submissions_status ON submissions(status);
+
 CREATE INDEX idx_admin_solutions_problem_id ON admin_solutions(problem_id);
 CREATE INDEX idx_admin_solutions_created_by ON admin_solutions(created_by);
 CREATE INDEX idx_admin_solutions_created_at ON admin_solutions(created_at);
@@ -99,6 +121,9 @@ CREATE TRIGGER update_problems_updated_at BEFORE UPDATE ON problems
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_solutions_updated_at BEFORE UPDATE ON solutions
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_submissions_updated_at BEFORE UPDATE ON submissions
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_admin_solutions_updated_at BEFORE UPDATE ON admin_solutions
