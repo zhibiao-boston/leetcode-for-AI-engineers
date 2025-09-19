@@ -7,7 +7,7 @@ import AddProblemModal from './AddProblemModal';
 import EditProblemModal from './EditProblemModal';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
 import ProblemsManagementTab from './ProblemsManagementTab';
-import SolutionManagementTab from './SolutionManagementTab.tsx';
+import SolutionManagementTab from './SolutionManagementTab';
 import AnalyticsTab from './AnalyticsTab';
 
 interface Problem {

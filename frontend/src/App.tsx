@@ -13,7 +13,7 @@ import QuestionList from './components/QuestionList';
 import QuestionDetails from './components/QuestionDetails';
 import AdminDashboard from './components/AdminDashboard';
 import UserProfilePage from './components/UserProfilePage';
-import ErrorBoundary from './components/ErrorBoundary.tsx';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Home Page Component that uses ProblemContext
 const HomePage: React.FC = () => {
