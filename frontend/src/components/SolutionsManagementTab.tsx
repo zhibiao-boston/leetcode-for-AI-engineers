@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface AdminSolution {
   id: string;
@@ -36,6 +37,7 @@ const SolutionsManagementTab: React.FC<SolutionsManagementTabProps> = ({
   onSaveSolution,
   onClearSolution
 }) => {
+  const { theme } = useTheme();
   const [allSolutions, setAllSolutions] = useState<AdminSolution[]>([]);
   const [problems, setProblems] = useState<Problem[]>([]);
   const [selectedProblem, setSelectedProblem] = useState<string>('all');
@@ -245,27 +247,45 @@ const SolutionsManagementTab: React.FC<SolutionsManagementTabProps> = ({
 
       {/* Summary stats */}
       <div className="mt-8 grid grid-cols-4 gap-4">
-        <div className="bg-gray-800 rounded-lg p-4">
-          <div className="text-2xl font-bold text-white">{allSolutions.length}</div>
-          <div className="text-sm text-gray-400">Total Solutions</div>
+        <div className={`rounded-lg p-4 transition-colors duration-200 ${
+          theme === 'dark' ? 'bg-gray-800' : 'bg-white border border-gray-200'
+        }`}>
+          <div className={`text-2xl font-bold transition-colors duration-200 ${
+            theme === 'dark' ? 'text-white' : 'text-gray-900'
+          }`}>{allSolutions.length}</div>
+          <div className={`text-sm transition-colors duration-200 ${
+            theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+          }`}>Total Solutions</div>
         </div>
-        <div className="bg-gray-800 rounded-lg p-4">
+        <div className={`rounded-lg p-4 transition-colors duration-200 ${
+          theme === 'dark' ? 'bg-gray-800' : 'bg-white border border-gray-200'
+        }`}>
           <div className="text-2xl font-bold text-green-400">
             {allSolutions.filter(s => s.language === 'python').length}
           </div>
-          <div className="text-sm text-gray-400">Python</div>
+          <div className={`text-sm transition-colors duration-200 ${
+            theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+          }`}>Python</div>
         </div>
-        <div className="bg-gray-800 rounded-lg p-4">
+        <div className={`rounded-lg p-4 transition-colors duration-200 ${
+          theme === 'dark' ? 'bg-gray-800' : 'bg-white border border-gray-200'
+        }`}>
           <div className="text-2xl font-bold text-yellow-400">
             {allSolutions.filter(s => s.language === 'javascript').length}
           </div>
-          <div className="text-sm text-gray-400">JavaScript</div>
+          <div className={`text-sm transition-colors duration-200 ${
+            theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+          }`}>JavaScript</div>
         </div>
-        <div className="bg-gray-800 rounded-lg p-4">
+        <div className={`rounded-lg p-4 transition-colors duration-200 ${
+          theme === 'dark' ? 'bg-gray-800' : 'bg-white border border-gray-200'
+        }`}>
           <div className="text-2xl font-bold text-blue-400">
             {problems.length}
           </div>
-          <div className="text-sm text-gray-400">Problems</div>
+          <div className={`text-sm transition-colors duration-200 ${
+            theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+          }`}>Problems</div>
         </div>
       </div>
     </div>

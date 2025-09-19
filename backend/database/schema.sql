@@ -64,6 +64,35 @@ CREATE TABLE submissions (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Test Cases Table
+CREATE TABLE test_cases (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    problem_id UUID NOT NULL REFERENCES problems(id) ON DELETE CASCADE,
+    input TEXT NOT NULL,
+    expected_output TEXT NOT NULL,
+    description TEXT,
+    is_hidden BOOLEAN DEFAULT false,
+    is_quick_test BOOLEAN DEFAULT false,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Execution Records Table (for tracking test executions)
+CREATE TABLE execution_records (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    problem_id UUID NOT NULL REFERENCES problems(id) ON DELETE CASCADE,
+    code TEXT NOT NULL,
+    language VARCHAR(20) NOT NULL,
+    passed BOOLEAN NOT NULL,
+    passed_count INTEGER NOT NULL,
+    total_count INTEGER NOT NULL,
+    execution_time INTEGER NOT NULL,
+    memory_usage INTEGER NOT NULL,
+    is_quick_test BOOLEAN DEFAULT false,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Admin Solutions Table
 CREATE TABLE admin_solutions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -101,6 +130,15 @@ CREATE INDEX idx_submissions_problem_id ON submissions(problem_id);
 CREATE INDEX idx_submissions_submitted_at ON submissions(submitted_at DESC);
 CREATE INDEX idx_submissions_status ON submissions(status);
 
+CREATE INDEX idx_test_cases_problem_id ON test_cases(problem_id);
+CREATE INDEX idx_test_cases_is_hidden ON test_cases(is_hidden);
+CREATE INDEX idx_test_cases_is_quick_test ON test_cases(is_quick_test);
+
+CREATE INDEX idx_execution_records_user_id ON execution_records(user_id);
+CREATE INDEX idx_execution_records_problem_id ON execution_records(problem_id);
+CREATE INDEX idx_execution_records_created_at ON execution_records(created_at);
+CREATE INDEX idx_execution_records_is_quick_test ON execution_records(is_quick_test);
+
 CREATE INDEX idx_admin_solutions_problem_id ON admin_solutions(problem_id);
 CREATE INDEX idx_admin_solutions_created_by ON admin_solutions(created_by);
 CREATE INDEX idx_admin_solutions_created_at ON admin_solutions(created_at);
@@ -124,6 +162,9 @@ CREATE TRIGGER update_solutions_updated_at BEFORE UPDATE ON solutions
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_submissions_updated_at BEFORE UPDATE ON submissions
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_test_cases_updated_at BEFORE UPDATE ON test_cases
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_admin_solutions_updated_at BEFORE UPDATE ON admin_solutions

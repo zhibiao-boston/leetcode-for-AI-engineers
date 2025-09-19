@@ -1,14 +1,19 @@
+// Import error suppression utility first to ensure it's active before any components load
+import './utils/errorSuppression';
+
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { sampleQuestions, Question } from './data/questions';
+import { Question } from './data/questions';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProblemProvider, useProblems } from './contexts/ProblemContext';
 import { NotificationProvider } from './contexts/NotificationContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import Header from './components/Header';
 import QuestionList from './components/QuestionList';
 import QuestionDetails from './components/QuestionDetails';
 import AdminDashboard from './components/AdminDashboard';
 import UserProfilePage from './components/UserProfilePage';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Home Page Component that uses ProblemContext
 const HomePage: React.FC = () => {
@@ -16,10 +21,22 @@ const HomePage: React.FC = () => {
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
   const [isQuestionListVisible, setIsQuestionListVisible] = useState(true);
 
-  // Set first question as selected when problems load
+  // Set question from URL or first question when problems load
   useEffect(() => {
-    if (!selectedQuestion && problems.length > 0) {
-      setSelectedQuestion(problems[0]);
+    if (problems.length > 0 && !selectedQuestion) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const questionId = urlParams.get('question');
+      
+      if (questionId) {
+        const question = problems.find(p => p.id === questionId);
+        if (question) {
+          setSelectedQuestion(question);
+        } else {
+          setSelectedQuestion(problems[0]);
+        }
+      } else {
+        setSelectedQuestion(problems[0]);
+      }
     }
   }, [problems, selectedQuestion]);
 
@@ -48,6 +65,11 @@ const HomePage: React.FC = () => {
   const handleSelectQuestion = (question: Question) => {
     setSelectedQuestion(question);
     setIsQuestionListVisible(false); // Auto-hide list when question is selected
+    
+    // Update URL with question ID
+    const url = new URL(window.location.href);
+    url.searchParams.set('question', question.id);
+    window.history.pushState({}, '', url.toString());
   };
 
   // Toggle question list visibility
@@ -56,16 +78,16 @@ const HomePage: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen pt-16">
+    <div className="flex h-screen pt-16 dark:bg-gray-900 bg-white dark:text-white text-gray-900 transition-colors duration-200">
       {/* Question List - Collapsible */}
       <div className={`transition-all duration-300 ease-in-out ${
         isQuestionListVisible 
-          ? 'w-2/5 border-r border-gray-700' 
+          ? 'w-2/5 border-r dark:border-gray-700 border-gray-200' 
           : 'w-0 overflow-hidden'
       }`}>
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
-            <div className="text-gray-400">Loading problems...</div>
+            <div className="dark:text-gray-400 text-gray-600">Loading problems...</div>
           </div>
         ) : error ? (
           <div className="p-4">
@@ -128,22 +150,26 @@ function App() {
   }, []);
 
   return (
-    <AuthProvider>
-      <ProblemProvider>
-        <NotificationProvider>
-          <Router>
-            <div className="min-h-screen bg-gray-900 text-white">
-              <Header />
-              <Routes>
-                <Route path="/admin" element={<AdminDashboard />} />
-                <Route path="/profile" element={<UserProfilePage />} />
-                <Route path="/" element={<HomePage />} />
-              </Routes>
-            </div>
-          </Router>
-        </NotificationProvider>
-      </ProblemProvider>
-    </AuthProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <AuthProvider>
+          <ProblemProvider>
+            <NotificationProvider>
+              <Router>
+                <div className="min-h-screen transition-colors duration-200">
+                  <Header />
+                  <Routes>
+                    <Route path="/admin" element={<AdminDashboard />} />
+                    <Route path="/profile" element={<UserProfilePage />} />
+                    <Route path="/" element={<HomePage />} />
+                  </Routes>
+                </div>
+              </Router>
+            </NotificationProvider>
+          </ProblemProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Editor } from '@monaco-editor/react';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface PythonEditorProps {
   initialCode?: string;
@@ -42,21 +43,16 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
   initialCode = DEFAULT_TEMPLATE,
   onCodeChange,
   onRun,
-<<<<<<< HEAD
-  height = '400px'
-=======
   height = '400px',
   showHeader = true,
   triggerRun = 0,
   triggerClear = 0
->>>>>>> af13b53ed316492e25b2f85feb32354844a3adbd
 }) => {
+  const { theme } = useTheme();
   const [code, setCode] = useState(initialCode);
   const [output, setOutput] = useState('');
   const [isRunning, setIsRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
-<<<<<<< HEAD
-=======
   const [executionTime, setExecutionTime] = useState<number | null>(null);
 
   // Handle external trigger for run
@@ -72,7 +68,6 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
       handleClear();
     }
   }, [triggerClear]); // eslint-disable-line react-hooks/exhaustive-deps
->>>>>>> af13b53ed316492e25b2f85feb32354844a3adbd
 
   const handleCodeChange = (value: string | undefined) => {
     const newCode = value || '';
@@ -86,18 +81,12 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
     setIsRunning(true);
     setError(null);
     setOutput('Running...');
-<<<<<<< HEAD
-=======
     setExecutionTime(null);
->>>>>>> af13b53ed316492e25b2f85feb32354844a3adbd
     
     try {
       const result = await onRun(code);
       setOutput(result.output);
-<<<<<<< HEAD
-=======
       setExecutionTime(result.executionTime);
->>>>>>> af13b53ed316492e25b2f85feb32354844a3adbd
       if (result.error) {
         setError(result.error);
       }
@@ -113,66 +102,55 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
     setCode(DEFAULT_TEMPLATE);
     setOutput('');
     setError(null);
-<<<<<<< HEAD
-=======
     setExecutionTime(null);
->>>>>>> af13b53ed316492e25b2f85feb32354844a3adbd
     onCodeChange?.(DEFAULT_TEMPLATE);
   };
 
+  const handleEditorDidMount = (editor: any, monaco: any) => {
+    // Force editor to take full width
+    const editorElement = editor.getDomNode();
+    if (editorElement) {
+      editorElement.style.width = '100%';
+      editorElement.style.minWidth = '100%';
+      editorElement.style.maxWidth = '100%';
+      editorElement.style.flex = '1';
+      
+      const parentElement = editorElement.parentElement;
+      if (parentElement) {
+        parentElement.style.width = '100%';
+        parentElement.style.minWidth = '100%';
+        parentElement.style.flex = '1';
+      }
+    }
+  };
+
   return (
-    <div className="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
-<<<<<<< HEAD
-      {/* Editor Header */}
-      <div className="bg-gray-900 px-4 py-2 border-b border-gray-700 flex justify-between items-center">
-        <span className="text-sm font-medium text-gray-400">Python Editor</span>
-        <div className="flex space-x-2">
-          <button
-            onClick={handleRun}
-            disabled={isRunning}
-            className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white px-4 py-2 rounded-md transition-colors duration-200 text-sm"
-          >
-            {isRunning ? 'Running...' : 'Run'}
-          </button>
-          <button
-            onClick={handleClear}
-            className="bg-gray-600 hover:bg-gray-500 text-white px-3 py-1 rounded-md transition-colors duration-200 text-sm"
-          >
-            Clear
-          </button>
-        </div>
-      </div>
-=======
+    <div className={`rounded-lg overflow-hidden w-full transition-colors duration-200 ${
+      theme === 'dark' ? 'bg-gray-800 border border-gray-700' : 'bg-gray-50 border border-gray-200'
+    }`}>
       {/* Editor Header - Conditional rendering */}
       {showHeader && (
-        <div className="bg-gray-900 px-4 py-2 border-b border-gray-700 flex justify-end">
-          <div className="flex space-x-2">
-            <button
-              onClick={handleRun}
-              disabled={isRunning}
-              className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white px-4 py-2 rounded-md transition-colors duration-200 text-sm"
-            >
-              {isRunning ? 'Running...' : 'Run'}
-            </button>
-            <button
-              onClick={handleClear}
-              className="bg-gray-600 hover:bg-gray-500 text-white px-3 py-1 rounded-md transition-colors duration-200 text-sm"
-            >
-              Clear
-            </button>
+        <div className={`px-4 py-2 border-b transition-colors duration-200 ${
+          theme === 'dark' ? 'bg-gray-900 border-gray-700' : 'bg-gray-100 border-gray-200'
+        }`}>
+          <div className={`text-sm transition-colors duration-200 ${
+            theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+          }`}>
+            Python Editor
           </div>
         </div>
       )}
->>>>>>> af13b53ed316492e25b2f85feb32354844a3adbd
 
       {/* Code Editor */}
-      <div style={{ height }}>
+      <div style={{ height, width: '100%', minWidth: '100%' }}>
         <Editor
           height="100%"
+          width="100%"
           defaultLanguage="python"
           value={code}
           onChange={handleCodeChange}
-          theme="vs-dark"
+          onMount={handleEditorDidMount}
+          theme={theme === 'dark' ? 'vs-dark' : 'vs'}
           options={{
             fontSize: 14,
             minimap: { enabled: false },
@@ -191,29 +169,28 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
 
       {/* Output Area */}
       {(output || error) && (
-        <div className="bg-gray-900 border-t border-gray-700 p-4">
-<<<<<<< HEAD
-          <h4 className="text-sm font-medium text-gray-400 mb-2">Output:</h4>
-          <pre className="text-sm font-mono text-gray-100 whitespace-pre-wrap">
-            {error ? (
-              <span className="text-red-400">{error}</span>
-            ) : (
-              output
-=======
+        <div className={`border-t p-4 transition-colors duration-200 ${
+          theme === 'dark' ? 'bg-gray-900 border-gray-700' : 'bg-gray-100 border-gray-200'
+        }`}>
           <div className="flex items-center justify-between mb-2">
-            <h4 className="text-sm font-medium text-gray-400">Output:</h4>
+            <h4 className={`text-sm font-medium transition-colors duration-200 ${
+              theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+            }`}>Output:</h4>
             {executionTime && (
-              <span className="text-xs text-gray-500">
+              <span className={`text-xs transition-colors duration-200 ${
+                theme === 'dark' ? 'text-gray-500' : 'text-gray-500'
+              }`}>
                 Executed in {executionTime}ms
               </span>
             )}
           </div>
-          <pre className="text-sm font-mono text-gray-100 whitespace-pre-wrap bg-gray-800 p-3 rounded border">
+          <pre className={`text-sm font-mono whitespace-pre-wrap p-3 rounded border transition-colors duration-200 ${
+            theme === 'dark' ? 'bg-gray-800 text-gray-100' : 'bg-gray-200 text-gray-800'
+          }`}>
             {error ? (
               <span className="text-red-400">❌ {error}</span>
             ) : (
               <span className="text-green-400">✅ {output}</span>
->>>>>>> af13b53ed316492e25b2f85feb32354844a3adbd
             )}
           </pre>
         </div>

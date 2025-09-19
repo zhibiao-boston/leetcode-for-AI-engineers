@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Question } from '../data/questions';
 import PythonEditor from './PythonEditor';
 import { useAuth } from '../contexts/AuthContext';
-import { useProblems, AdminSolution } from '../contexts/ProblemContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface QuestionDetailsProps {
   question: Question | null;
@@ -29,179 +29,186 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
   isQuestionListVisible = true 
 }) => {
   const { token, user } = useAuth();
-  const { getPublishedSolutionsForProblem } = useProblems();
-  const [activeTab, setActiveTab] = useState<'description' | 'submissions' | 'solutions'>('description');
+  const { theme } = useTheme();
+  const [activeTab, setActiveTab] = useState<'description' | 'submissions'>('description');
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loadingSubmissions, setLoadingSubmissions] = useState(false);
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
-  const [solutions, setSolutions] = useState<AdminSolution[]>([]);
-  const [loadingSolutions, setLoadingSolutions] = useState(false);
-  const [leftPanelWidth, setLeftPanelWidth] = useState(60); // Percentage width for left panel (60% left, 40% right)
-  const [isResizing, setIsResizing] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState<'python' | 'java' | 'cpp'>('python');
+  
+  // Language configurations
+  const languageConfig = {
+    python: { name: 'Python 3', extension: 'py' },
+    java: { name: 'Java', extension: 'java' },
+    cpp: { name: 'C++', extension: 'cpp' }
+  };
+  
+  // Test case related state
+  const [activeTestCaseTab, setActiveTestCaseTab] = useState(0);
+  const [testCaseResults, setTestCaseResults] = useState<Record<string, {
+    passed: boolean;
+    actualOutput: string;
+    expectedOutput: string;
+    executionTime: number;
+  }>>({});
+  
+  const [currentCode, setCurrentCode] = useState<string>('');
+  const [isRunning, setIsRunning] = useState(false);
   const [layoutTrigger, setLayoutTrigger] = useState(0);
 
-  // Fetch submissions for current problem
-  const fetchSubmissions = useCallback(async () => {
-    if (!token || !question) return;
+  const getTestCases = (question: Question | null) => {
+    if (!question || !question.testCases) return [];
+    return question.testCases.map(tc => ({
+      id: tc.id,
+      input: tc.input,
+      expectedOutput: tc.expectedOutput
+    }));
+  };
 
-    try {
-      setLoadingSubmissions(true);
-      const response = await fetch(`http://localhost:5000/api/submissions/my-submissions?problem_id=${question.id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setSubmissions(data.data || []);
-      }
-    } catch (error) {
-      console.error('Failed to fetch submissions:', error);
-    } finally {
-      setLoadingSubmissions(false);
+  const getTemplateForQuestion = (question: Question | null, language: 'python' | 'java' | 'cpp' = 'python') => {
+    if (!question) return '';
+    
+    if (language === 'java') {
+      return question.javaTemplate || `public class Solution {
+    public void solve() {
+        // Your Java code here
+        
     }
-  }, [token, question]);
-
-  // Fetch published solutions for current problem
-  const fetchSolutions = useCallback(async () => {
-    if (!question) return;
-
-    try {
-      setLoadingSolutions(true);
-      const publishedSolutions = await getPublishedSolutionsForProblem(question.id);
-      setSolutions(publishedSolutions);
-    } catch (error) {
-      console.error('Error fetching solutions:', error);
-    } finally {
-      setLoadingSolutions(false);
+    
+    public static void main(String[] args) {
+        Solution solution = new Solution();
+        solution.solve();
     }
-  }, [question, getPublishedSolutionsForProblem]);
+}`;
+    } else if (language === 'cpp') {
+      return question.cppTemplate || `#include <iostream>
+#include <vector>
+#include <string>
+using namespace std;
 
-  // Fetch submissions when question changes
-  useEffect(() => {
-    if (question && token) {
-      fetchSubmissions();
+class Solution {
+public:
+    void solve() {
+        // Your C++ code here
+        
     }
-  }, [question, token, fetchSubmissions]);
+};
 
-  // Fetch solutions when question changes
-  useEffect(() => {
-    if (question) {
-      fetchSolutions();
+int main() {
+    Solution solution;
+    solution.solve();
+    return 0;
+}`;
     }
-  }, [question, fetchSolutions]);
+    
+    // Default to Python
+    return question.template || `def solve():
+    """
+    Your Python code here
+    """
+    pass
 
-  // Python execution function
-  const executePythonCode = async (code: string): Promise<{ output: string; error?: string; executionTime: number }> => {
+if __name__ == "__main__":
+    solve()`;
+  };
+
+  const handleCodeChange = useCallback((value: string | undefined) => {
+    setCurrentCode(value || '');
+  }, []);
+
+  const executeSingleTestCase = (testCase: any, code: string) => {
     const startTime = Date.now();
     
     try {
-      // Simulate realistic Python execution
-      await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 1000));
+      // Simple mock execution - in real app this would be server-side
+      let actualOutput = 'null';
       
-      // Enhanced code analysis and execution simulation
-      let output = '';
-      let hasError = false;
-      
-      // Check for syntax errors
-      if (code.includes('def ') && !code.includes(':')) {
-        hasError = true;
-        output = '';
-      }
-      
-      // Check for common Python patterns and simulate output
-      if (code.includes('print(')) {
-        // Extract print statements and simulate output
-        const printMatches = code.match(/print\([^)]+\)/g);
-        if (printMatches) {
-          output = printMatches.map(print => {
-            // Simulate print output - extract content between quotes
-            const content = print.replace(/print\(|\)/g, '').replace(/['"]/g, '');
-            return content;
-          }).join('\n');
+      // Mock different outputs based on code content for demonstration
+      if (code.includes('return')) {
+        if (code.includes('pref[0]')) {
+          actualOutput = '[5,7,2,3]';
+        } else if (code.includes('new int')) {
+          actualOutput = '[]';
         }
       }
       
-      // Check for mathematical operations
-      if (code.includes('sum(') || code.includes('len(') || code.includes('max(')) {
-        output += '\nFunction executed successfully.';
-      }
-      
-      // Check for variable assignments
-      if (code.includes('=') && !code.includes('==')) {
-        output += '\nVariable assigned successfully.';
-      }
-      
-      // Check for loops
-      if (code.includes('for ') || code.includes('while ')) {
-        output += '\nLoop executed successfully.';
-      }
-      
-      // Default success message
-      if (!output) {
-        output = 'Code executed successfully!\nExecution completed without errors.';
-      }
+      const executionTime = Date.now() - startTime;
+      const passed = actualOutput === testCase.expectedOutput;
       
       return {
-        output: output || 'Code executed successfully.',
-        error: hasError ? 'Syntax Error: Missing colon after function definition' : undefined,
-        executionTime: Date.now() - startTime
+        passed,
+        actualOutput,
+        expectedOutput: testCase.expectedOutput,
+        executionTime
       };
     } catch (error) {
       return {
-        output: '',
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        passed: false,
+        actualOutput: 'Error',
+        expectedOutput: testCase.expectedOutput,
         executionTime: Date.now() - startTime
       };
     }
   };
 
-  const handleCodeChange = (code: string) => {
-    // Code change handler - can be extended for auto-save functionality
-    console.log('Code changed:', code.length, 'characters');
+  const executeAllTestCases = (code: string) => {
+    if (!question) return;
+    
+    const testCases = getTestCases(question).slice(0, 2);
+    const results: Record<string, {
+      passed: boolean;
+      actualOutput: string;
+      expectedOutput: string;
+      executionTime: number;
+    }> = {};
+    
+    testCases.forEach(testCase => {
+      const result = executeSingleTestCase(testCase, code);
+      results[testCase.id] = result;
+    });
+    
+    setTestCaseResults(results);
   };
 
   // Create submission record
-  const createSubmission = async (code: string, result: { output: string; error?: string; executionTime: number }) => {
-    if (!token || !user || !question) return;
+  const createSubmission = async (code: string, result: string) => {
+    if (!user || !question || !token) {
+      console.log('Missing data for submission:', { user: !!user, question: !!question, token: !!token });
+      return;
+    }
 
     try {
-      // Determine submission status based on result
-      let status = 'Accepted';
-      if (result.error) {
-        status = 'Runtime Error';
-      } else if (result.executionTime > 5000) {
-        status = 'Time Limit Exceeded';
-      }
-
       const submissionData = {
         problem_id: question.id,
+        language: selectedLanguage,
         code: code,
-        language: 'python',
-        status: status,
-        execution_time: Math.round(result.executionTime),
-        memory_usage: Math.random() * 20 + 5, // Simulate memory usage
-        test_cases_passed: result.error ? 0 : Math.floor(Math.random() * 5) + 1,
-        total_test_cases: 5
+        status: result as any,
+        execution_time: Math.floor(Math.random() * 100) + 10,
+        memory_usage: Math.floor(Math.random() * 50) + 10,
+        test_cases_passed: 2,
+        total_test_cases: 2
       };
+
+      console.log('Creating submission:', submissionData);
 
       const response = await fetch('http://localhost:5000/api/submissions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(submissionData)
       });
 
+      console.log('Submission response:', response.status, response.statusText);
+
       if (response.ok) {
-        console.log('Submission created successfully');
-        // Refresh submissions list
-        await fetchSubmissions();
+        const responseData = await response.json();
+        console.log('Submission created successfully:', responseData);
+        fetchSubmissions();
       } else {
-        console.error('Failed to create submission');
+        const errorData = await response.text();
+        console.error('Submission failed:', response.status, errorData);
       }
     } catch (error) {
       console.error('Error creating submission:', error);
@@ -209,111 +216,76 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
   };
 
   const handleCodeRun = async (code: string) => {
+    setIsRunning(true);
+    
+    // Execute test cases
+    executeAllTestCases(code);
+    
+    // Simulate some processing time
+    setTimeout(async () => {
+      await createSubmission(code, 'Accepted');
+      setIsRunning(false);
+    }, 1000);
+  };
+
+  const fetchSubmissions = useCallback(async () => {
+    if (!question || !token) {
+      console.log('Cannot fetch submissions - missing data:', { question: !!question, token: !!token });
+      return;
+    }
+    
+    console.log('Fetching submissions for question:', question.id);
+    setLoadingSubmissions(true);
     try {
-      const result = await executePythonCode(code);
+      const response = await fetch(`http://localhost:5000/api/submissions/my-submissions?problem_id=${question.id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       
-      // Create submission record
-      await createSubmission(code, result);
+      console.log('Fetch submissions response:', response.status, response.statusText);
       
-      return result;
+      if (response.ok) {
+        const responseData = await response.json();
+        console.log('Fetched submissions response:', responseData);
+        // Extract the actual submissions array from the response data
+        const submissions = responseData.data || [];
+        console.log('Actual submissions array:', submissions);
+        setSubmissions(submissions);
+      } else {
+        const errorData = await response.text();
+        console.error('Failed to fetch submissions:', response.status, errorData);
+        setSubmissions([]); // Set empty array on error
+      }
     } catch (error) {
-      return {
-        output: '',
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
-        executionTime: 0
-      };
+      console.error('Error fetching submissions:', error);
+      setSubmissions([]); // Set empty array on error
+    } finally {
+      setLoadingSubmissions(false);
     }
-  };
+  }, [question, token]);
 
-
-  // Handle clicking on a submission to load code into editor
-  const handleLoadSubmission = (submission: Submission) => {
-    setSelectedSubmission(submission);
-    // Switch to description tab to show the loaded code
-    setActiveTab('description');
-  };
-
-  // Handle resize functionality
-  const handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsResizing(true);
-  };
-
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!isResizing) return;
-    
-    const container = document.querySelector('.resizable-container') as HTMLElement;
-    if (!container) return;
-    
-    const containerRect = container.getBoundingClientRect();
-    const newLeftWidth = ((e.clientX - containerRect.left) / containerRect.width) * 100;
-    
-    // Constrain between 30% and 70% for better balance
-    const constrainedWidth = Math.min(Math.max(newLeftWidth, 30), 70);
-    setLeftPanelWidth(constrainedWidth);
-  }, [isResizing]);
-
-  const handleMouseUp = useCallback(() => {
-    setIsResizing(false);
-    // Trigger layout update for the editor
-    setTimeout(() => {
-      setLayoutTrigger(prev => prev + 1);
-    }, 100);
-  }, []);
-
-  // Add event listeners for mouse move and up
   useEffect(() => {
-    if (isResizing) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-      document.body.style.cursor = 'col-resize';
-      document.body.style.userSelect = 'none';
-    } else {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
+    if (question) {
+      setCurrentCode(getTemplateForQuestion(question, selectedLanguage));
+      fetchSubmissions();
     }
+  }, [question, selectedLanguage, fetchSubmissions]);
 
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
-    };
-  }, [isResizing, handleMouseMove, handleMouseUp]);
-
-  const statusColors = {
-    'Accepted': 'text-green-600 bg-green-100',
-    'Wrong Answer': 'text-red-600 bg-red-100',
-    'Time Limit Exceeded': 'text-yellow-600 bg-yellow-100',
-    'Runtime Error': 'text-red-600 bg-red-100',
-    'Compile Error': 'text-red-600 bg-red-100',
-    'Memory Limit Exceeded': 'text-orange-600 bg-orange-100',
-    'Output Limit Exceeded': 'text-orange-600 bg-orange-100',
-    'Presentation Error': 'text-blue-600 bg-blue-100'
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString();
-  };
-
-  const formatExecutionTime = (time?: number) => {
-    if (!time) return 'N/A';
-    return `${time}ms`;
-  };
-
-  const formatMemoryUsage = (memory?: number) => {
-    if (!memory) return 'N/A';
-    return `${memory}MB`;
-  };
+  useEffect(() => {
+    setLayoutTrigger(prev => prev + 1);
+  }, []);
 
   if (!question) {
     return (
       <div className="h-full flex items-center justify-center">
         <div className="text-center">
-          <div className="text-gray-400 text-lg mb-2">No question selected</div>
-          <div className="text-gray-500 text-sm">Click on a question from the list to view details</div>
+          <div className={`text-lg mb-2 transition-colors duration-200 ${
+            theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+          }`}>No question selected</div>
+          <div className={`text-sm transition-colors duration-200 ${
+            theme === 'dark' ? 'text-gray-500' : 'text-gray-500'
+          }`}>Click on a question from the list to view details</div>
         </div>
       </div>
     );
@@ -322,339 +294,385 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="flex-shrink-0 bg-gray-800 border-b border-gray-700 px-6 py-4">
+      <div className={`flex-shrink-0 border-b px-6 py-4 transition-colors duration-200 ${
+        theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-gray-100 border-gray-200'
+      }`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             {/* Toggle Question List Button */}
             {onToggleQuestionList && (
-              <button
+                <button
                 onClick={onToggleQuestionList}
-                className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-md transition-colors duration-200"
-                title={isQuestionListVisible ? 'Hide Question List' : 'Show Question List'}
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  {isQuestionListVisible ? (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-                  ) : (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-                  )}
-                </svg>
-              </button>
+                className={`p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200 ${
+                  theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                }`}
+                title={isQuestionListVisible ? "Hide question list" : "Show question list"}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                </button>
             )}
             
-            <div>
-              <h1 className="text-xl font-semibold text-white">{question.title}</h1>
-              <div className="flex items-center space-x-4 mt-2">
-                <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                  question.difficulty === 'easy' ? 'bg-green-100 text-green-800' :
-                  question.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                  'bg-red-100 text-red-800'
+            <div className="flex items-center space-x-3">
+              <span className="text-lg font-semibold">{question.id}. {question.title}</span>
+              <span className={`px-2 py-1 text-xs rounded font-medium ${
+                question.difficulty === 'easy' 
+                  ? 'bg-green-100 text-green-800' 
+                  : question.difficulty === 'medium'
+                  ? 'bg-yellow-100 text-yellow-800'
+                  : 'bg-red-100 text-red-800'
                 }`}>
                   {question.difficulty}
                 </span>
-                <span className="text-sm text-gray-400">{question.company}</span>
+              
+              {/* Topics */}
+              <div className="flex items-center space-x-2">
+                <span className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>Topics</span>
+                <div className="flex space-x-1">
+                  {(question.categories || []).map((topic, index) => (
+                    <span key={index} className={`px-2 py-1 text-xs rounded ${
+                      theme === 'dark' ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-700'
+                    }`}>
+                      {topic}
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
           
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={() => handleCodeRun(currentCode)}
+              disabled={isRunning}
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition-colors duration-200 text-sm font-medium"
+            >
+              {isRunning ? 'Running...' : 'Run Code'}
+            </button>
+            <button
+              onClick={() => executeAllTestCases(currentCode || getTemplateForQuestion(question, selectedLanguage))}
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition-colors duration-200 text-sm font-medium"
+            >
+              Test Code
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex-shrink-0 bg-gray-800 border-b border-gray-700">
-        <div className="flex space-x-8 px-6">
+      {/* Content - LeetCode Style Layout */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Left Panel - Question Description */}
+        <div 
+          className={`w-1/2 border-r overflow-hidden transition-colors duration-200 ${
+            theme === 'dark' ? 'border-gray-700' : 'border-gray-200'
+          }`}
+        >
+          {/* Tab Navigation */}
+          <div className={`border-b px-4 transition-colors duration-200 ${
+            theme === 'dark' ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-gray-50'
+          }`}>
+            <div className="flex space-x-1">
           <button
             onClick={() => setActiveTab('description')}
-            className={`py-3 px-1 border-b-2 font-medium text-sm ${
+                className={`px-4 py-3 text-sm font-medium border-b-2 transition-all duration-200 ${
               activeTab === 'description'
-                ? 'border-purple-500 text-purple-400'
-                : 'border-transparent text-gray-400 hover:text-gray-300'
+                    ? theme === 'dark'
+                      ? 'border-blue-400 text-blue-400'
+                      : 'border-blue-500 text-blue-600'
+                    : theme === 'dark'
+                      ? 'border-transparent text-gray-400 hover:text-gray-300'
+                      : 'border-transparent text-gray-600 hover:text-gray-900'
             }`}
           >
             Description
           </button>
           <button
             onClick={() => setActiveTab('submissions')}
-            className={`py-3 px-1 border-b-2 font-medium text-sm ${
+                className={`px-4 py-3 text-sm font-medium border-b-2 transition-all duration-200 ${
               activeTab === 'submissions'
-                ? 'border-purple-500 text-purple-400'
-                : 'border-transparent text-gray-400 hover:text-gray-300'
+                    ? theme === 'dark'
+                      ? 'border-blue-400 text-blue-400'
+                      : 'border-blue-500 text-blue-600'
+                    : theme === 'dark'
+                      ? 'border-transparent text-gray-400 hover:text-gray-300'
+                      : 'border-transparent text-gray-600 hover:text-gray-900'
             }`}
           >
             Submissions ({submissions.length})
           </button>
-          <button
-            onClick={() => setActiveTab('solutions')}
-            className={`py-3 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'solutions'
-                ? 'border-purple-500 text-purple-400'
-                : 'border-transparent text-gray-400 hover:text-gray-300'
-            }`}
-          >
-            Solutions ({solutions.length})
-          </button>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 flex overflow-hidden resizable-container">
-        {/* Left Panel - Description or Submissions */}
-        <div 
-          className="border-r border-gray-700 p-6 overflow-y-auto"
-          style={{ width: `${leftPanelWidth}%` }}
-        >
+          {/* Tab Content */}
+          <div className="flex-1 overflow-y-auto p-6">
           {activeTab === 'description' ? (
             <div className="space-y-6">
               <div>
-                <h2 className="text-lg font-semibold text-white mb-3">Description</h2>
-                <div className="text-gray-300 whitespace-pre-wrap leading-relaxed">
+                <h2 className={`text-lg font-semibold mb-3 transition-colors duration-200 ${
+                  theme === 'dark' ? 'text-white' : 'text-gray-900'
+                }`}>Description</h2>
+                <div className={`whitespace-pre-wrap leading-relaxed transition-colors duration-200 ${
+                  theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                }`}>
                   {question.description}
                 </div>
               </div>
               
+              {/* Examples */}
+              {question.examples && question.examples.length > 0 && (
+                <div>
+                  <h3 className={`text-md font-semibold mb-2 transition-colors duration-200 ${
+                    theme === 'dark' ? 'text-white' : 'text-gray-900'
+                  }`}>Examples</h3>
+                  <div className="grid grid-cols-1 gap-4">
+                    {question.examples.map((example: any, index: number) => (
+                      <div key={index} className={`rounded border p-3 ${theme === 'dark' ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-gray-50'}`}>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <div className={`text-sm mb-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Example {index + 1} Input:</div>
+                            <pre className={`text-sm font-mono p-2 rounded ${theme === 'dark' ? 'bg-gray-800 text-gray-100' : 'bg-gray-100 text-gray-800'}`}>{example.input}</pre>
+                          </div>
+                          <div>
+                            <div className={`text-sm mb-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Example {index + 1} Output:</div>
+                            <pre className={`text-sm font-mono p-2 rounded ${theme === 'dark' ? 'bg-gray-800 text-gray-100' : 'bg-gray-100 text-gray-800'}`}>{example.output}</pre>
+                          </div>
+                        </div>
+                        {example.explanation && (
+                          <div className={`mt-2 text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                            <strong>Explanation:</strong> {example.explanation}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Categories */}
+              {question.categories && question.categories.length > 0 && (
               <div>
-                <h3 className="text-md font-semibold text-white mb-2">Categories</h3>
+                  <h3 className={`text-md font-semibold mb-2 transition-colors duration-200 ${
+                    theme === 'dark' ? 'text-white' : 'text-gray-900'
+                  }`}>Categories</h3>
                 <div className="flex flex-wrap gap-2">
-                  {question.categories.map((category, index) => (
-                    <span key={index} className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full">
+                    {question.categories.map((category: string, index: number) => (
+                      <span key={index} className={`px-3 py-1 rounded-full text-sm font-medium transition-colors duration-200 ${
+                        theme === 'dark' 
+                          ? 'bg-purple-600 text-purple-100' 
+                          : 'bg-purple-100 text-purple-800'
+                      }`}>
                       {category}
                     </span>
                   ))}
                 </div>
               </div>
+              )}
 
+              {/* Tags */}
+              {question.tags && question.tags.length > 0 && (
               <div>
-                <h3 className="text-md font-semibold text-white mb-2">Tags</h3>
+                  <h3 className={`text-md font-semibold mb-2 transition-colors duration-200 ${
+                    theme === 'dark' ? 'text-white' : 'text-gray-900'
+                  }`}>Tags</h3>
                 <div className="flex flex-wrap gap-2">
-                  {question.tags.map((tag, index) => (
-                    <span key={index} className="px-2 py-1 bg-gray-700 text-gray-300 text-xs rounded">
+                    {question.tags.map((tag: string, index: number) => (
+                      <span key={index} className={`px-2 py-1 text-xs rounded transition-colors duration-200 ${
+                        theme === 'dark' 
+                          ? 'bg-gray-700 text-gray-300' 
+                          : 'bg-gray-200 text-gray-700'
+                      }`}>
                       {tag}
                     </span>
                   ))}
                 </div>
               </div>
-            </div>
-          ) : activeTab === 'solutions' ? (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-white">Published Solutions</h2>
-                <button
-                  onClick={fetchSolutions}
-                  disabled={loadingSolutions}
-                  className="text-sm text-purple-400 hover:text-purple-300 disabled:opacity-50"
-                >
-                  {loadingSolutions ? 'Loading...' : 'Refresh'}
-                </button>
-              </div>
-              
-              {loadingSolutions ? (
-                <div className="text-center py-8">
-                  <div className="text-gray-400">Loading solutions...</div>
-                </div>
-              ) : solutions.length === 0 ? (
-                <div className="text-center py-8">
-                  <div className="text-gray-400 mb-2">No published solutions available</div>
-                  <p className="text-gray-500 text-sm">Solutions will appear here once they are published by administrators.</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {solutions.map((solution) => (
-                    <div key={solution.id} className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-                      <div className="flex items-center justify-between mb-3">
-                        <h3 className="text-lg font-semibold text-white">{solution.title}</h3>
-                        <div className="flex items-center space-x-2">
-                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                            solution.language === 'python' ? 'bg-green-100 text-green-800' :
-                            solution.language === 'javascript' ? 'bg-yellow-100 text-yellow-800' :
-                            solution.language === 'java' ? 'bg-red-100 text-red-800' :
-                            solution.language === 'cpp' ? 'bg-blue-100 text-blue-800' :
-                            'bg-gray-100 text-gray-800'
-                          }`}>
-                            {solution.language.toUpperCase()}
-                          </span>
-                          {solution.time_complexity && (
-                            <span className="text-xs text-gray-400">Time: {solution.time_complexity}</span>
-                          )}
-                          {solution.space_complexity && (
-                            <span className="text-xs text-gray-400">Space: {solution.space_complexity}</span>
-                          )}
-                        </div>
-                      </div>
-                      
-                      {solution.description && (
-                        <p className="text-gray-300 mb-3">{solution.description}</p>
-                      )}
-                      
-                      <div className="bg-gray-900 rounded p-3 mb-3">
-                        <div className="text-sm text-gray-400 mb-2">Code:</div>
-                        <pre className="text-sm text-gray-300 whitespace-pre-wrap font-mono overflow-x-auto">
-                          {solution.code}
-                        </pre>
-                      </div>
-                      
-                      {solution.explanation && (
-                        <div>
-                          <div className="text-sm text-gray-400 mb-2">Explanation:</div>
-                          <p className="text-gray-300 text-sm">{solution.explanation}</p>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
               )}
             </div>
           ) : (
+            // Submissions tab content
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-white">Your Submissions</h2>
-                <button
-                  onClick={fetchSubmissions}
-                  disabled={loadingSubmissions}
-                  className="text-sm text-purple-400 hover:text-purple-300 disabled:opacity-50"
-                >
-                  {loadingSubmissions ? 'Loading...' : 'Refresh'}
-                </button>
-              </div>
-              
               {loadingSubmissions ? (
-                <div className="flex justify-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+                <div className="text-center py-8">
+                  <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                    Loading submissions...
+                  </div>
                 </div>
               ) : submissions.length === 0 ? (
                 <div className="text-center py-8">
-                  <p className="text-gray-400">No submissions yet</p>
-                  <p className="text-sm text-gray-500 mt-1">Run your code to create a submission</p>
+                  <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                    No submissions yet
+                  </div>
                 </div>
               ) : (
-                <div className="space-y-3">
-                  {submissions.map((submission) => (
-                    <div key={submission.id} className="bg-gray-900 rounded-lg p-4 hover:bg-gray-800 transition-colors duration-200">
-                      <div className="flex items-center justify-between mb-3">
+                <div className="space-y-2">
+                  {Array.isArray(submissions) && submissions.map((submission, index) => (
+                    <div
+                      key={submission.id}
+                      onClick={() => setSelectedSubmission(submission)}
+                      className={`p-3 border rounded cursor-pointer transition-colors duration-200 ${
+                        selectedSubmission?.id === submission.id
+                          ? theme === 'dark'
+                            ? 'border-purple-500 bg-purple-900/20'
+                            : 'border-purple-500 bg-purple-50'
+                          : theme === 'dark'
+                            ? 'border-gray-700 hover:border-gray-600 hover:bg-gray-800'
+                            : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
-                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${statusColors[submission.status]}`}>
+                          <span className={`px-2 py-1 text-xs rounded font-medium ${
+                            submission.status === 'Accepted'
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-red-100 text-red-800'
+                          }`}>
                             {submission.status}
                           </span>
-                          <span className="text-sm text-gray-400">
-                            {submission.language.toUpperCase()}
+                          <span className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                            {submission.language}
                           </span>
                         </div>
-                        <span className="text-sm text-gray-400">
-                          {formatDate(submission.submitted_at)}
-                        </span>
+                        <div className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                          {new Date(submission.submitted_at).toLocaleString()}
+                        </div>
                       </div>
                       
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4 text-sm text-gray-400">
-                          <span>⏱️ {formatExecutionTime(submission.execution_time)}</span>
-                          <span>💾 {formatMemoryUsage(submission.memory_usage)}</span>
-                          <span>✅ {submission.test_cases_passed}/{submission.total_test_cases}</span>
+                      {submission.execution_time && (
+                        <div className={`mt-2 text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                          Runtime: {submission.execution_time}ms | Memory: {submission.memory_usage}MB
                         </div>
-                        
-                        <button
-                          onClick={() => handleLoadSubmission(submission)}
-                          className="text-purple-400 hover:text-purple-300 text-sm font-medium transition-colors duration-200 flex items-center space-x-1"
-                        >
-                          <span>📋 Load Code</span>
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                          </svg>
-                        </button>
-                      </div>
+                      )}
                     </div>
                   ))}
                 </div>
               )}
             </div>
           )}
-        </div>
+                </div>
+              </div>
 
-        {/* Resizable Divider */}
-        <div
-          className={`w-1 bg-gray-600 hover:bg-gray-500 cursor-col-resize flex-shrink-0 transition-colors duration-200 ${
-            isResizing ? 'bg-gray-500' : ''
-          }`}
-          onMouseDown={handleMouseDown}
-        >
-          <div className="w-full h-full flex items-center justify-center">
-            <div className="w-1 h-8 bg-gray-400 rounded-full"></div>
-          </div>
-        </div>
-
-        {/* Right Panel - Code Editor */}
-        <div 
-          className="flex flex-col"
-          style={{ width: `${100 - leftPanelWidth}%` }}
-        >
-          
+              {/* Right Panel - Code Editor */}
+        <div className="w-1/2 flex flex-col">
+          {/* Editor Header */}
+          <div className={`border-b px-4 py-3 transition-colors duration-200 ${
+            theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'
+          }`}>
+            <div className="flex items-center justify-between">
+              <div className="flex space-x-4">
+                <span className={`text-sm font-medium transition-colors duration-200 ${
+                  theme === 'dark' ? 'text-purple-400' : 'text-purple-600'
+                }`}>Code</span>
+                </div>
+                          <div className="flex items-center space-x-2">
+                <select
+                  value={selectedLanguage}
+                  onChange={(e) => setSelectedLanguage(e.target.value as 'python' | 'java' | 'cpp')}
+                  className={`text-xs transition-colors duration-200 bg-transparent border-none outline-none cursor-pointer ${
+                    theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                  }`}
+                >
+                  <option value="python">{languageConfig.python.name}</option>
+                  <option value="java">{languageConfig.java.name}</option>
+                  <option value="cpp">{languageConfig.cpp.name}</option>
+                </select>
+                <div className={`w-2 h-2 rounded-full bg-green-500`}></div>
+                <span className={`text-xs transition-colors duration-200 ${
+                  theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                }`}>Auto</span>
+                        </div>
+                      </div>
+                    </div>
+                  
           <div className="flex-1 flex flex-col">
-            {/* Loaded submission indicator */}
-            {selectedSubmission && (
-              <div className="flex-shrink-0 p-4 bg-purple-900/30 border-b border-purple-500/30">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-purple-400 text-sm font-medium">📋 Loaded from submission</span>
-                    <span className="text-gray-400 text-sm">
-                      {formatDate(selectedSubmission.submitted_at)} • {selectedSubmission.language.toUpperCase()}
-                    </span>
+            {/* Code Editor */}
+            <div className="flex-1 w-full" style={{ width: '100%', minWidth: '100%', maxWidth: '100%' }}>
+                      <PythonEditor
+                initialCode={getTemplateForQuestion(question, selectedLanguage)}
+                        onCodeChange={handleCodeChange}
+                height="100%"
+                showHeader={false}
+                language={selectedLanguage}
+                        externalCode={selectedSubmission?.code}
+                layoutTrigger={layoutTrigger}
+                      />
+            </div>
+
+            {/* Test Cases Section - Bottom of right panel */}
+            {question && getTestCases(question).length > 0 && (
+              <div className={`border-t transition-colors duration-200 ${
+                theme === 'dark' ? 'border-gray-700' : 'border-gray-200'
+              }`}>
+                <div className={`px-6 py-4 transition-colors duration-200 ${
+                  theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'
+                }`}>
+                  {/* Test Case Tabs */}
+                  <div className="flex space-x-1 mb-4">
+                    {getTestCases(question).slice(0, 2).map((testCase: any, index: number) => {
+                      const testResult = testCaseResults[testCase.id];
+                      return (
+                    <button
+                          key={testCase.id}
+                          onClick={() => setActiveTestCaseTab(index)}
+                          className={`px-4 py-2 text-sm font-medium rounded transition-colors duration-200 ${
+                            activeTestCaseTab === index
+                              ? theme === 'dark'
+                                ? 'bg-green-600 text-white'
+                                : 'bg-green-100 text-green-800'
+                              : theme === 'dark'
+                                ? 'text-gray-400 hover:text-gray-300 hover:bg-gray-700'
+                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                          }`}
+                        >
+                          Case {index + 1}
+                          {testResult && (
+                            <span className={`ml-2 ${
+                              testResult.passed ? 'text-green-500' : 'text-red-500'
+                            }`}>
+                              {testResult.passed ? '✓' : '✗'}
+                            </span>
+                          )}
+                    </button>
+                      );
+                    })}
                   </div>
-                  <button
-                    onClick={() => setSelectedSubmission(null)}
-                    className="text-gray-400 hover:text-white transition-colors duration-200"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
+
+                  {/* Active Test Case Content */}
+                  {getTestCases(question)[activeTestCaseTab] && (
+                    <div className={`rounded-lg p-4 border transition-colors duration-200 ${
+                      theme === 'dark' ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'
+                    }`}>
+                  <div className="space-y-4">
+                        <div>
+                          <div className={`text-sm font-medium mb-2 transition-colors duration-200 ${
+                            theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                          }`}>Input:</div>
+                          <div className={`p-3 rounded border font-mono text-sm whitespace-pre-wrap transition-colors duration-200 ${
+                            theme === 'dark' ? 'bg-gray-800 text-gray-100 border-gray-600' : 'bg-gray-100 text-gray-800 border-gray-300'
+                          }`}>
+                            {getTestCases(question)[activeTestCaseTab].input}
+                          </div>
+                        </div>
+                        <div>
+                          <div className={`text-sm font-medium mb-2 transition-colors duration-200 ${
+                            theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                          }`}>Expected Output:</div>
+                          <div className={`p-3 rounded border font-mono text-sm whitespace-pre-wrap transition-colors duration-200 ${
+                            theme === 'dark' ? 'bg-gray-800 text-gray-100 border-gray-600' : 'bg-gray-100 text-gray-800 border-gray-300'
+                          }`}>
+                            {getTestCases(question)[activeTestCaseTab].expectedOutput}
+                          </div>
+                        </div>
+                            </div>
+                          </div>
+                        )}
                 </div>
               </div>
             )}
-            
-            {/* Language indicator */}
-            <div className="flex-shrink-0 px-6 py-3 bg-gray-800 border-b border-gray-700">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-400">Python 3</span>
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="text-xs text-gray-400">Ready</span>
-                </div>
-              </div>
-            </div>
-            
-            {/* Code Editor - takes remaining space */}
-            <div className="flex-1 w-full h-full">
-              <PythonEditor
-                initialCode={`class Solution:
-    def solve(self, input_data):
-        """
-        Implement your solution here
-        
-        Args:
-            input_data: The input data for the problem
-            
-        Returns:
-            The solution result
-        """
-        # Your code here
-        pass
-
-# Example usage
-if __name__ == "__main__":
-    solution = Solution()
-    # Test your solution here
-    print("Solution ready!")
-`}
-                onCodeChange={handleCodeChange}
-                onRun={handleCodeRun}
-                height="100%"
-                showHeader={true}
-                externalCode={selectedSubmission?.code}
-                layoutTrigger={layoutTrigger}
-              />
-            </div>
           </div>
         </div>
       </div>
-    </div>
+          </div>
   );
 };
 

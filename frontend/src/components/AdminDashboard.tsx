@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useProblems } from '../contexts/ProblemContext';
 import { useNotifications } from '../contexts/NotificationContext';
+import { useTheme } from '../contexts/ThemeContext';
 import AddProblemModal from './AddProblemModal';
 import EditProblemModal from './EditProblemModal';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
@@ -43,8 +44,9 @@ interface AdminSolution {
 
 const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
-  const { problems: contextProblems, addProblem, updateProblem, removeProblem } = useProblems();
+  const { addProblem, updateProblem, removeProblem } = useProblems();
   const { addNotification } = useNotifications();
+  const { theme } = useTheme();
   const [problems, setProblems] = useState<Problem[]>([]);
   const [solutions] = useState<AdminSolution[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -298,38 +300,58 @@ const AdminDashboard: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-white">Loading admin dashboard...</div>
+      <div className={`min-h-screen flex items-center justify-center transition-colors duration-200 ${
+        theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'
+      }`}>
+        <div className={`transition-colors duration-200 ${
+          theme === 'dark' ? 'text-white' : 'text-gray-900'
+        }`}>Loading admin dashboard...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className={`min-h-screen transition-colors duration-200 ${
+      theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'
+    }`}>
       {/* Enhanced header with tabs */}
-      <div className="bg-gray-800 border-b border-gray-700 p-6">
+      <div className={`border-b p-6 transition-colors duration-200 ${
+        theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+      }`}>
         <h1 className="text-3xl font-bold mb-4">Admin Dashboard</h1>
         <div className="flex space-x-4">
           <button
             onClick={() => setActiveTab('problems')}
-            className={`px-4 py-2 rounded-md ${
-              activeTab === 'problems' ? 'bg-purple-600' : 'bg-gray-700'
+            className={`px-4 py-2 rounded-md transition-colors duration-200 ${
+              activeTab === 'problems' 
+                ? 'bg-purple-600 text-white' 
+                : theme === 'dark' 
+                  ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
             }`}
           >
             Problems Management
           </button>
           <button
             onClick={() => setActiveTab('solutions')}
-            className={`px-4 py-2 rounded-md ${
-              activeTab === 'solutions' ? 'bg-purple-600' : 'bg-gray-700'
+            className={`px-4 py-2 rounded-md transition-colors duration-200 ${
+              activeTab === 'solutions' 
+                ? 'bg-purple-600 text-white' 
+                : theme === 'dark' 
+                  ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
             }`}
           >
             Solutions Management
           </button>
           <button
             onClick={() => setActiveTab('analytics')}
-            className={`px-4 py-2 rounded-md ${
-              activeTab === 'analytics' ? 'bg-purple-600' : 'bg-gray-700'
+            className={`px-4 py-2 rounded-md transition-colors duration-200 ${
+              activeTab === 'analytics' 
+                ? 'bg-purple-600 text-white' 
+                : theme === 'dark' 
+                  ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
             }`}
           >
             Analytics
