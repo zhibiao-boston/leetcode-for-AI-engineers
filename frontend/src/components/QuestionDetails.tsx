@@ -191,7 +191,7 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
     console.log('Fetching submissions for question:', question.id);
     setLoadingSubmissions(true);
     try {
-      const response = await fetch(`http://localhost:5000/api/submissions?problem_id=${question.id}`, {
+      const response = await fetch(`http://localhost:5000/api/submissions/my-submissions?problem_id=${question.id}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
