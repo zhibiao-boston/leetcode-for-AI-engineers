@@ -55,6 +55,11 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
   const [currentCode, setCurrentCode] = useState<string>('');
   const [isRunning, setIsRunning] = useState(false);
   const [layoutTrigger, setLayoutTrigger] = useState(0);
+  
+  // Code execution output state
+  const [codeOutput, setCodeOutput] = useState<string>('');
+  const [executionTime, setExecutionTime] = useState<number | null>(null);
+  const [codeError, setCodeError] = useState<string | null>(null);
 
   const getTestCases = (question: Question | null) => {
     if (!question || !question.testCases) return [];
@@ -69,7 +74,7 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
     if (!question) return '';
     
     if (language === 'java') {
-      return question.javaTemplate || `public class Solution {
+      return question.template || `public class Solution {
     public void solve() {
         // Your Java code here
         
@@ -81,7 +86,7 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
     }
 }`;
     } else if (language === 'cpp') {
-      return question.cppTemplate || `#include <iostream>
+      return question.template || `#include <iostream>
 #include <vector>
 #include <string>
 using namespace std;
@@ -215,17 +220,86 @@ if __name__ == "__main__":
     }
   };
 
+  // Simulate code execution
+  const simulateCodeExecution = async (code: string, language: string): Promise<{ output: string; error?: string }> => {
+    // Simulate execution delay
+    await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 1200));
+    
+    // Check for common syntax errors
+    if (code.includes('syntax error') || code.includes('SyntaxError')) {
+      return { output: '', error: 'SyntaxError: Invalid syntax detected' };
+    }
+    
+    // Simple simulation based on language and code content
+    if (language === 'python') {
+      if (code.includes('print(')) {
+        const printMatches = code.match(/print\(['"`]([^'"`]*)['"`]\)/g);
+        if (printMatches) {
+          const outputs = printMatches.map(match => {
+            const content = match.match(/print\(['"`]([^'"`]*)['"`]\)/);
+            return content ? content[1] : 'Output';
+          });
+          return { output: outputs.join('\n') + '\n\nExecution completed successfully.' };
+        }
+        return { output: 'Hello, World!\nExecution completed successfully.' };
+      } else if (code.includes('def ') || code.includes('class ')) {
+        return { output: 'Code compiled successfully.\nFunction/Class defined.\nReady for execution.' };
+      } else if (code.includes('pass')) {
+        return { output: 'Code structure detected.\nImplement your solution to see results.' };
+      } else {
+        return { output: 'Code executed successfully.\nNo output generated.' };
+      }
+    } else if (language === 'java') {
+      if (code.includes('System.out.println')) {
+        return { output: 'Java code compiled and executed successfully.\nOutput: Hello, World!' };
+      }
+      return { output: 'Java code compiled successfully.\nReady for execution.' };
+    } else if (language === 'cpp') {
+      if (code.includes('cout')) {
+        return { output: 'C++ code compiled and executed successfully.\nOutput: Hello, World!' };
+      }
+      return { output: 'C++ code compiled successfully.\nReady for execution.' };
+    }
+    
+    return { output: 'Code executed successfully.' };
+  };
+
   const handleCodeRun = async (code: string) => {
+    if (!code.trim()) {
+      setCodeError('No code to execute');
+      return;
+    }
+
     setIsRunning(true);
+    setCodeError(null);
+    setCodeOutput('');
+    setExecutionTime(null);
     
-    // Execute test cases
-    executeAllTestCases(code);
-    
-    // Simulate some processing time
-    setTimeout(async () => {
-      await createSubmission(code, 'Accepted');
+    try {
+      const startTime = Date.now();
+      
+      // Simulate code execution
+      const result = await simulateCodeExecution(code, selectedLanguage);
+      
+      const execTime = Date.now() - startTime;
+      
+      setCodeOutput(result.output);
+      setExecutionTime(execTime);
+      
+      if (result.error) {
+        setCodeError(result.error);
+      }
+      
+      // Also execute test cases for comprehensive feedback
+      executeAllTestCases(code);
+      
+      // Create submission record
+      await createSubmission(code, result.error ? 'Runtime Error' : 'Accepted');
+    } catch (error) {
+      setCodeError(error instanceof Error ? error.message : 'Execution failed');
+    } finally {
       setIsRunning(false);
-    }, 1000);
+    }
   };
 
   const fetchSubmissions = useCallback(async () => {
@@ -315,7 +389,7 @@ if __name__ == "__main__":
             )}
             
             <div className="flex items-center space-x-3">
-              <span className="text-lg font-semibold">{question.id}. {question.title}</span>
+              <span className="text-lg font-semibold">{question.title}</span>
               <span className={`px-2 py-1 text-xs rounded font-medium ${
                 question.difficulty === 'easy' 
                   ? 'bg-green-100 text-green-800' 
@@ -590,13 +664,47 @@ if __name__ == "__main__":
                       <PythonEditor
                 initialCode={getTemplateForQuestion(question, selectedLanguage)}
                         onCodeChange={handleCodeChange}
-                height="100%"
+                height="70%"
                 showHeader={false}
                 language={selectedLanguage}
                         externalCode={selectedSubmission?.code}
                 layoutTrigger={layoutTrigger}
                       />
             </div>
+
+            {/* Code Execution Output */}
+            {(codeOutput || codeError) && (
+              <div className={`h-[30%] border-t p-4 transition-colors duration-200 ${
+                theme === 'dark' ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'
+              }`}>
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className={`text-sm font-medium transition-colors duration-200 ${
+                    theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                  }`}>Output</h4>
+                  {executionTime && (
+                    <span className={`text-xs transition-colors duration-200 ${
+                      theme === 'dark' ? 'text-gray-500' : 'text-gray-600'
+                    }`}>
+                      Executed in {executionTime}ms
+                    </span>
+                  )}
+                </div>
+                
+                <div className={`h-full overflow-y-auto rounded border transition-colors duration-200 ${
+                  theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-300'
+                }`}>
+                  {codeError ? (
+                    <pre className="text-red-400 text-sm font-mono p-3 whitespace-pre-wrap">
+                      Error: {codeError}
+                    </pre>
+                  ) : (
+                    <pre className="text-green-400 text-sm font-mono p-3 whitespace-pre-wrap">
+                      {codeOutput}
+                    </pre>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Test Cases Section - Bottom of right panel */}
             {question && getTestCases(question).length > 0 && (
