@@ -129,6 +129,25 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
     if (editorInstance) {
       const timeoutId = setTimeout(() => {
         editorInstance.layout();
+        
+        // Force the editor to take full width
+        const editorElement = editorInstance.getDomNode();
+        if (editorElement) {
+          editorElement.style.width = '100%';
+          editorElement.style.height = '100%';
+          
+          // Also set the parent container
+          const parentElement = editorElement.parentElement;
+          if (parentElement) {
+            parentElement.style.width = '100%';
+            parentElement.style.height = '100%';
+          }
+        }
+        
+        // Force layout again
+        setTimeout(() => {
+          editorInstance.layout();
+        }, 50);
       }, 100);
       
       return () => clearTimeout(timeoutId);
@@ -236,10 +255,8 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
 
   return (
     <div 
-      className={`w-full h-full transition-colors duration-200 ${
-        theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'
-      }`}
-      style={{ width: '100%', minWidth: '100%', maxWidth: '100%' }}
+      className="w-full h-full flex flex-col"
+      style={{ width: '100%', minWidth: '100%', maxWidth: '100%', height: '100%', minHeight: '100%' }}
     >
       {/* Editor Header - Conditional rendering */}
       {showHeader && (
@@ -267,9 +284,7 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
       {/* Code Editor */}
       <div 
         style={{ height, width: '100%' }} 
-        className={`w-full h-full transition-colors duration-200 ${
-          theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'
-        }`}
+        className="w-full h-full"
         onClick={() => {
           if (editorInstance) {
             editorInstance.focus();
@@ -299,6 +314,25 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
             setTimeout(() => {
               editor.focus();
               editor.layout();
+              
+              // Force the editor to take full width
+              const editorElement = editor.getDomNode();
+              if (editorElement) {
+                editorElement.style.width = '100%';
+                editorElement.style.height = '100%';
+                
+                // Also set the parent container
+                const parentElement = editorElement.parentElement;
+                if (parentElement) {
+                  parentElement.style.width = '100%';
+                  parentElement.style.height = '100%';
+                }
+              }
+              
+              // Force layout again
+              setTimeout(() => {
+                editor.layout();
+              }, 50);
             }, 100);
             
             // Prevent editor from losing focus during typing
@@ -316,6 +350,9 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
             minimap: { enabled: false },
             scrollBeyondLastLine: false,
             automaticLayout: true,
+            overviewRulerLanes: 0,
+            hideCursorInOverviewRuler: true,
+            overviewRulerBorder: false,
             tabSize: 4,
             insertSpaces: true,
             wordWrap: 'on',
