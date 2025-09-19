@@ -496,11 +496,11 @@ if __name__ == "__main__":
                         <div className="grid grid-cols-2 gap-4">
                           <div>
                             <div className={`text-sm mb-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Example {index + 1} Input:</div>
-                            <pre className={`text-sm font-mono p-2 rounded ${theme === 'dark' ? 'bg-gray-800 text-gray-100' : 'bg-gray-100 text-gray-800'}`}>{example.input}</pre>
+                            <pre className={`text-sm font-mono p-2 rounded whitespace-pre-wrap break-all overflow-x-auto ${theme === 'dark' ? 'bg-gray-800 text-gray-100' : 'bg-gray-100 text-gray-800'}`}>{example.input}</pre>
                           </div>
                           <div>
                             <div className={`text-sm mb-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Example {index + 1} Output:</div>
-                            <pre className={`text-sm font-mono p-2 rounded ${theme === 'dark' ? 'bg-gray-800 text-gray-100' : 'bg-gray-100 text-gray-800'}`}>{example.output}</pre>
+                            <pre className={`text-sm font-mono p-2 rounded whitespace-pre-wrap break-all overflow-x-auto ${theme === 'dark' ? 'bg-gray-800 text-gray-100' : 'bg-gray-100 text-gray-800'}`}>{example.output}</pre>
                           </div>
                         </div>
                         {example.explanation && (
