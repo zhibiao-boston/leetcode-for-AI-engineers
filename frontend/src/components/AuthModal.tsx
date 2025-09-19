@@ -158,11 +158,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onModeChan
           </button>
         </div>
 
-        {mode === 'login' && (
-          <div className="mt-4 text-center text-sm text-gray-400">
-            Demo credentials: ai_coding@gmail.com / 123456
-          </div>
-        )}
       </div>
     </div>
   );
