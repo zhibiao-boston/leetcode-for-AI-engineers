@@ -14,7 +14,7 @@ export const mockUsers = [
   {
     id: '1',
     email: 'ai_coding@gmail.com',
-    password_hash: '$2b$12$jUh91MwcKXSwliw26DtfRep.MpEFbdQZVqmw006gTKuRbggKgSBY2', // Admin123
+    password_hash: '$2b$12$AUZXZByI3/yRa2MRZR625en/NCRywmUUYGsmZRs7kXz5mDed/30vG', // 123456
     name: 'AI Coding Admin',
     role: 'admin' as const,
     created_at: new Date(),
