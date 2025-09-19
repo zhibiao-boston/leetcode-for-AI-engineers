@@ -200,15 +200,20 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
       console.log('Fetch submissions response:', response.status, response.statusText);
       
       if (response.ok) {
-        const data = await response.json();
-        console.log('Fetched submissions:', data);
-        setSubmissions(data);
+        const responseData = await response.json();
+        console.log('Fetched submissions response:', responseData);
+        // Extract the actual submissions array from the response data
+        const submissions = responseData.data || [];
+        console.log('Actual submissions array:', submissions);
+        setSubmissions(submissions);
       } else {
         const errorData = await response.text();
         console.error('Failed to fetch submissions:', response.status, errorData);
+        setSubmissions([]); // Set empty array on error
       }
     } catch (error) {
       console.error('Error fetching submissions:', error);
+      setSubmissions([]); // Set empty array on error
     } finally {
       setLoadingSubmissions(false);
     }
@@ -455,7 +460,7 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {submissions.map((submission, index) => (
+                  {Array.isArray(submissions) && submissions.map((submission, index) => (
                     <div
                       key={submission.id}
                       onClick={() => setSelectedSubmission(submission)}
