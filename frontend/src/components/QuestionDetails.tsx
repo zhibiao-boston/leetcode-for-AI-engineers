@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Question } from '../data/questions';
 import PythonEditor from './PythonEditor';
 import { useAuth } from '../contexts/AuthContext';
+import { useProblems, AdminSolution } from '../contexts/ProblemContext';
 
 interface QuestionDetailsProps {
   question: Question | null;
@@ -28,10 +29,13 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
   isQuestionListVisible = true 
 }) => {
   const { token, user } = useAuth();
-  const [activeTab, setActiveTab] = useState<'description' | 'submissions'>('description');
+  const { getPublishedSolutionsForProblem } = useProblems();
+  const [activeTab, setActiveTab] = useState<'description' | 'submissions' | 'solutions'>('description');
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loadingSubmissions, setLoadingSubmissions] = useState(false);
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
+  const [solutions, setSolutions] = useState<AdminSolution[]>([]);
+  const [loadingSolutions, setLoadingSolutions] = useState(false);
   const [leftPanelWidth, setLeftPanelWidth] = useState(60); // Percentage width for left panel (60% left, 40% right)
   const [isResizing, setIsResizing] = useState(false);
   const [layoutTrigger, setLayoutTrigger] = useState(0);
@@ -60,12 +64,34 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
     }
   }, [token, question]);
 
+  // Fetch published solutions for current problem
+  const fetchSolutions = useCallback(async () => {
+    if (!question) return;
+
+    try {
+      setLoadingSolutions(true);
+      const publishedSolutions = await getPublishedSolutionsForProblem(question.id);
+      setSolutions(publishedSolutions);
+    } catch (error) {
+      console.error('Error fetching solutions:', error);
+    } finally {
+      setLoadingSolutions(false);
+    }
+  }, [question, getPublishedSolutionsForProblem]);
+
   // Fetch submissions when question changes
   useEffect(() => {
     if (question && token) {
       fetchSubmissions();
     }
   }, [question, token, fetchSubmissions]);
+
+  // Fetch solutions when question changes
+  useEffect(() => {
+    if (question) {
+      fetchSolutions();
+    }
+  }, [question, fetchSolutions]);
 
   // Python execution function
   const executePythonCode = async (code: string): Promise<{ output: string; error?: string; executionTime: number }> => {
@@ -357,6 +383,16 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
           >
             Submissions ({submissions.length})
           </button>
+          <button
+            onClick={() => setActiveTab('solutions')}
+            className={`py-3 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'solutions'
+                ? 'border-purple-500 text-purple-400'
+                : 'border-transparent text-gray-400 hover:text-gray-300'
+            }`}
+          >
+            Solutions ({solutions.length})
+          </button>
         </div>
       </div>
 
@@ -397,6 +433,75 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
                   ))}
                 </div>
               </div>
+            </div>
+          ) : activeTab === 'solutions' ? (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-white">Published Solutions</h2>
+                <button
+                  onClick={fetchSolutions}
+                  disabled={loadingSolutions}
+                  className="text-sm text-purple-400 hover:text-purple-300 disabled:opacity-50"
+                >
+                  {loadingSolutions ? 'Loading...' : 'Refresh'}
+                </button>
+              </div>
+              
+              {loadingSolutions ? (
+                <div className="text-center py-8">
+                  <div className="text-gray-400">Loading solutions...</div>
+                </div>
+              ) : solutions.length === 0 ? (
+                <div className="text-center py-8">
+                  <div className="text-gray-400 mb-2">No published solutions available</div>
+                  <p className="text-gray-500 text-sm">Solutions will appear here once they are published by administrators.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {solutions.map((solution) => (
+                    <div key={solution.id} className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-lg font-semibold text-white">{solution.title}</h3>
+                        <div className="flex items-center space-x-2">
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                            solution.language === 'python' ? 'bg-green-100 text-green-800' :
+                            solution.language === 'javascript' ? 'bg-yellow-100 text-yellow-800' :
+                            solution.language === 'java' ? 'bg-red-100 text-red-800' :
+                            solution.language === 'cpp' ? 'bg-blue-100 text-blue-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {solution.language.toUpperCase()}
+                          </span>
+                          {solution.time_complexity && (
+                            <span className="text-xs text-gray-400">Time: {solution.time_complexity}</span>
+                          )}
+                          {solution.space_complexity && (
+                            <span className="text-xs text-gray-400">Space: {solution.space_complexity}</span>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {solution.description && (
+                        <p className="text-gray-300 mb-3">{solution.description}</p>
+                      )}
+                      
+                      <div className="bg-gray-900 rounded p-3 mb-3">
+                        <div className="text-sm text-gray-400 mb-2">Code:</div>
+                        <pre className="text-sm text-gray-300 whitespace-pre-wrap font-mono overflow-x-auto">
+                          {solution.code}
+                        </pre>
+                      </div>
+                      
+                      {solution.explanation && (
+                        <div>
+                          <div className="text-sm text-gray-400 mb-2">Explanation:</div>
+                          <p className="text-gray-300 text-sm">{solution.explanation}</p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           ) : (
             <div className="space-y-4">

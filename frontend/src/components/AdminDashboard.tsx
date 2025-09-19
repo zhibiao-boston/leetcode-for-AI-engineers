@@ -6,7 +6,7 @@ import AddProblemModal from './AddProblemModal';
 import EditProblemModal from './EditProblemModal';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
 import ProblemsManagementTab from './ProblemsManagementTab';
-import SolutionsManagementTab from './SolutionsManagementTab';
+import SolutionManagementTab from './SolutionManagementTab';
 import AnalyticsTab from './AnalyticsTab';
 
 interface Problem {
@@ -49,6 +49,7 @@ const AdminDashboard: React.FC = () => {
   const [solutions] = useState<AdminSolution[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'problems' | 'solutions' | 'analytics'>('problems');
+  const [selectedProblemForSolutions, setSelectedProblemForSolutions] = useState<Problem | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -352,12 +353,59 @@ const AdminDashboard: React.FC = () => {
       )}
 
       {activeTab === 'solutions' && (
-        <SolutionsManagementTab
-          solutions={solutions}
-          onEditSolution={handleEditSolution}
-          onSaveSolution={handleSaveSolution}
-          onClearSolution={handleClearSolution}
-        />
+        <div className="p-6">
+          {!selectedProblemForSolutions ? (
+            <div>
+              <h2 className="text-2xl font-bold text-white mb-6">Select a Problem to Manage Solutions</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {problems.map((problem) => (
+                  <div
+                    key={problem.id}
+                    onClick={() => setSelectedProblemForSolutions(problem)}
+                    className="bg-gray-800 rounded-lg p-4 border border-gray-700 cursor-pointer hover:bg-gray-750 transition-colors"
+                  >
+                    <h3 className="text-lg font-semibold text-white mb-2">{problem.title}</h3>
+                    <p className="text-gray-400 text-sm mb-3 line-clamp-2">{problem.description}</p>
+                    <div className="flex items-center justify-between">
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                        problem.difficulty === 'easy' ? 'bg-green-100 text-green-800' :
+                        problem.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-red-100 text-red-800'
+                      }`}>
+                        {problem.difficulty}
+                      </span>
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                        problem.status === 'published' ? 'bg-green-100 text-green-800' :
+                        problem.status === 'draft' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {problem.status}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div>
+              <div className="flex items-center mb-6">
+                <button
+                  onClick={() => setSelectedProblemForSolutions(null)}
+                  className="mr-4 text-purple-400 hover:text-purple-300"
+                >
+                  ← Back to Problem Selection
+                </button>
+                <h2 className="text-2xl font-bold text-white">
+                  Solutions for "{selectedProblemForSolutions.title}"
+                </h2>
+              </div>
+              <SolutionManagementTab
+                problemId={selectedProblemForSolutions.id}
+                problemTitle={selectedProblemForSolutions.title}
+              />
+            </div>
+          )}
+        </div>
       )}
 
       {activeTab === 'analytics' && (

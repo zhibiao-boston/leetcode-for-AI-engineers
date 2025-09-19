@@ -9,6 +9,7 @@ export interface AdminSolution {
   explanation?: string;
   time_complexity?: string;
   space_complexity?: string;
+  is_published: boolean;
   created_by?: string;
   created_by_name?: string;
   created_at: Date;
@@ -25,6 +26,7 @@ export interface CreateAdminSolutionData {
   explanation?: string;
   time_complexity?: string;
   space_complexity?: string;
+  is_published?: boolean;
   created_by?: string;
 }
 
@@ -37,6 +39,7 @@ export interface UpdateAdminSolutionData {
   explanation?: string;
   time_complexity?: string;
   space_complexity?: string;
+  is_published?: boolean;
 }
 
 export class AdminSolutionModel {
@@ -67,6 +70,7 @@ export class AdminSolutionModel {
       explanation: 'This solution uses a simple dictionary to store key-value pairs. Insert and retrieve operations are O(1), while remove is O(1) on average.',
       time_complexity: 'O(1)',
       space_complexity: 'O(n)',
+      is_published: true,
       created_by: '1',
       created_by_name: 'Admin User',
       created_at: new Date(),
@@ -90,6 +94,7 @@ export class AdminSolutionModel {
     const newSolution: AdminSolution = {
       id: (this.solutions.length + 1).toString(),
       ...data,
+      is_published: data.is_published || false,
       created_by_name: 'Admin User', // This would come from user lookup in real implementation
       created_at: new Date(),
       updated_at: new Date()
