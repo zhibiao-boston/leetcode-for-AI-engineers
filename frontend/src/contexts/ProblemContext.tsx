@@ -61,6 +61,7 @@ export const ProblemProvider: React.FC<ProblemProviderProps> = ({ children }) =>
           company: problem.company || '',
           categories: problem.categories || [],
           tags: problem.tags || [],
+          lastReported: 'Recently updated', // Add missing field
           status: problem.status
         }));
         

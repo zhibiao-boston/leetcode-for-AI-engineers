@@ -64,7 +64,7 @@ export const sampleQuestions: Question[] = [
     id: "6",
     title: "Neural Network Optimizer",
     categories: ["coding", "onsite"],
-    lastReported: "4 days ago",
+    lastReported: "2 days ago",
     description: "Design an optimization system for neural network training. The system should:\n\n• Implement various optimization algorithms (Adam, SGD, etc.)\n• Support learning rate scheduling and decay\n• Handle gradient clipping and normalization\n• Provide performance metrics and visualization\n• Optimize for both training speed and model accuracy",
     difficulty: "hard",
     company: "DeepMind",
@@ -74,7 +74,7 @@ export const sampleQuestions: Question[] = [
     id: "7",
     title: "Prompt Engineering Framework",
     categories: ["coding", "phone"],
-    lastReported: "6 days ago",
+    lastReported: "4 days ago",
     description: "Create a framework for prompt engineering and management. The framework should:\n\n• Support template-based prompt generation\n• Implement prompt versioning and A/B testing\n• Provide prompt performance analytics\n• Support dynamic prompt injection\n• Handle prompt security and validation",
     difficulty: "medium",
     company: "Anthropic",
@@ -84,10 +84,41 @@ export const sampleQuestions: Question[] = [
     id: "8",
     title: "Vector Database Query",
     categories: ["coding", "onsite"],
-    lastReported: "2 days ago",
+    lastReported: "1 day ago",
     description: "Implement a vector similarity search system. The system should:\n\n• Support high-dimensional vector storage and indexing\n• Implement efficient similarity search algorithms\n• Handle batch queries and real-time updates\n• Provide ranking and filtering capabilities\n• Optimize for both accuracy and query speed",
     difficulty: "hard",
     company: "Pinecone",
     tags: ["vector databases", "similarity search", "machine learning", "indexing"]
+  },
+  // Generated LLM Implementation Problems
+  {
+    id: "0e2ff27d-dccb-4f44-9390-9262da3fafec",
+    title: "LLM Implementation: Self-Attention",
+    categories: ["coding", "phone"],
+    lastReported: "Just generated",
+    description: "This is a placeholder problem for self-attention. Use Cursor's AI to generate the actual problem.",
+    difficulty: "medium",
+    company: "OpenAI",
+    tags: ["attention", "transformer", "implementation"]
+  },
+  {
+    id: "207c7383-c2b8-48eb-b8af-9bc9478e333e",
+    title: "LLM Implementation: Kv-Cache",
+    categories: ["coding", "phone"],
+    lastReported: "Just generated",
+    description: "This is a placeholder problem for kv-cache. Use Cursor's AI to generate the actual problem.",
+    difficulty: "medium",
+    company: "OpenAI",
+    tags: ["inference", "optimization", "memory"]
+  },
+  {
+    id: "6731795c-f9f8-48bd-bf14-66985da810d2",
+    title: "LLM Implementation: Greedy Search",
+    categories: ["coding", "phone"],
+    lastReported: "Just generated",
+    description: "This is a placeholder problem for greedy search. Use Cursor's AI to generate the actual problem.",
+    difficulty: "easy",
+    company: "OpenAI",
+    tags: ["generation", "search", "decoding"]
   }
 ];

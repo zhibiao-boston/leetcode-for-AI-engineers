@@ -1,0 +1,35 @@
+# ML/AI Problem Generation System Requirements
+# Python 3.8+ required
+
+# Core dependencies
+numpy>=1.21.0
+pandas>=1.3.0
+
+# JSON handling (built-in, but listed for clarity)
+# json - built-in module
+
+# Date/time handling (built-in, but listed for clarity)  
+# datetime - built-in module
+
+# UUID generation (built-in, but listed for clarity)
+# uuid - built-in module
+
+# File system operations (built-in, but listed for clarity)
+# os - built-in module
+# pathlib - built-in module
+
+# Type hints (built-in in Python 3.5+)
+# typing - built-in module
+
+# Command line argument parsing (built-in, but listed for clarity)
+# argparse - built-in module
+
+# Optional: For advanced features
+# matplotlib>=3.5.0  # For visualization (if needed)
+# seaborn>=0.11.0     # For statistical plots (if needed)
+# scikit-learn>=1.0.0 # For ML utilities (if needed)
+
+# Development dependencies (optional)
+# pytest>=6.0.0      # For testing
+# black>=21.0.0      # For code formatting
+# flake8>=3.9.0      # For linting

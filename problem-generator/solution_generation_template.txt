@@ -1,0 +1,44 @@
+Generate two versions of a solution for the following ML/AI problem:
+
+**PROBLEM**: {GENERATED_PROBLEM}
+
+Requirements:
+1. **Full Solution**: Complete, production-ready code with detailed comments
+2. **Practice Snippet**: High-level code with hints for learning
+
+Output Format (JSON):
+{
+  "full_solution": {
+    "title": "Complete Solution",
+    "code": "complete Python code with detailed comments explaining each step",
+    "explanation": "comprehensive explanation of the approach, algorithm, and ML/AI concepts used",
+    "time_complexity": "O(n) - detailed explanation",
+    "space_complexity": "O(n) - detailed explanation",
+    "key_concepts": ["concept1", "concept2", "concept3"],
+    "optimization_notes": "performance optimization details and trade-offs",
+    "ml_specific_notes": "ML/AI specific considerations and best practices"
+  },
+  "practice_snippet": {
+    "title": "Practice Version",
+    "code": "high-level code with hints, TODOs, and placeholder comments for learning",
+    "hints": ["hint1", "hint2", "hint3", "hint4"],
+    "learning_objectives": ["objective1", "objective2", "objective3"],
+    "difficulty_level": "beginner|intermediate|advanced",
+    "step_by_step_guide": "brief guide on how to approach this problem"
+  }
+}
+
+Guidelines for Full Solution:
+- Write production-quality Python code
+- Include comprehensive comments explaining ML/AI concepts
+- Provide detailed complexity analysis
+- Explain the algorithm and approach clearly
+- Include ML/AI specific optimizations and considerations
+- Mention relevant libraries and frameworks
+
+Guidelines for Practice Snippet:
+- Provide a skeleton with key functions and structure
+- Include helpful hints without giving away the solution
+- Add TODO comments for students to fill in
+- Focus on learning objectives and key concepts
+- Make it challenging but achievable for practice

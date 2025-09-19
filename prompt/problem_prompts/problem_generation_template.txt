@@ -1,0 +1,43 @@
+Generate a comprehensive LLM implementation coding problem for the topic: {LLM_CODING_TOPIC}
+
+Requirements:
+- Create a realistic, industry-relevant coding problem focused on LLM implementation
+- Include clear problem statement with Python code examples
+- Specify input/output format with Python data types
+- Add constraints and edge cases
+- Make it appropriate for technical interviews
+- Focus on practical LLM implementation details
+- Include realistic data scenarios and Python code examples
+- Provide clear Python function signatures and expected behavior
+
+Output Format (JSON):
+{{
+  "title": "Problem Title",
+  "description": "Detailed problem description with examples and context",
+  "difficulty": "easy|medium|hard",
+  "company": "OpenAI|Anthropic|Google|Microsoft|Meta|DeepMind|Amazon|NVIDIA",
+  "categories": ["coding", "phone", "onsite"],
+  "tags": ["relevant", "llm", "implementation", "tags"],
+  "examples": [
+    {{
+      "input": "Python code example or data structure",
+      "output": "expected Python output or return value",
+      "explanation": "brief explanation of the example"
+    }}
+  ],
+  "constraints": ["constraint 1", "constraint 2"],
+  "follow_up": "optional follow-up question or extension",
+  "function_signature": "def function_name(params) -> return_type:",
+  "input_format": "description of input data types and structure",
+  "output_format": "description of expected output format"
+}}
+
+Guidelines:
+- Make the problem practical and relevant to real LLM implementation work
+- Include clear Python input/output specifications
+- Provide meaningful examples that illustrate the LLM concept with Python code
+- Set appropriate constraints that reflect real-world limitations
+- Choose difficulty level based on the complexity of the LLM implementation concept
+- Select company that would realistically ask this type of question
+- Focus on Python implementation details and data structures
+- Include realistic LLM scenarios (attention mechanisms, tokenization, etc.)
