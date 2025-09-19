@@ -306,7 +306,6 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
             // Focus and interaction options
             acceptSuggestionOnEnter: 'on',
             acceptSuggestionOnCommitCharacter: true,
-            acceptSuggestionOnType: true,
             autoClosingBrackets: 'languageDefined',
             autoClosingQuotes: 'languageDefined',
             autoIndent: 'full',
