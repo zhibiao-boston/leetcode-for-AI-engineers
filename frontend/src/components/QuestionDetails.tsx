@@ -80,7 +80,7 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
     if (!question) return '';
     
     if (language === 'java') {
-      return question.javaTemplate || `public class Solution {
+      return question.template || `public class Solution {
     public void solve() {
         // Your Java code here
         
@@ -92,7 +92,7 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
     }
 }`;
     } else if (language === 'cpp') {
-      return question.cppTemplate || `#include <iostream>
+      return question.template || `#include <iostream>
 #include <vector>
 #include <string>
 using namespace std;
