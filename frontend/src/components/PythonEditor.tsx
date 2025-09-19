@@ -167,15 +167,12 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
     }
   }, [externalCode, code, onCodeChange]);
 
-  // Force editor to update when code changes
+  // Only update editor value when external code changes (not from user typing)
   useEffect(() => {
-    if (editorInstance && code) {
-      const currentValue = editorInstance.getValue();
-      if (currentValue !== code) {
-        editorInstance.setValue(code);
-      }
+    if (editorInstance && externalCode && externalCode !== editorInstance.getValue()) {
+      editorInstance.setValue(externalCode);
     }
-  }, [editorInstance, code]);
+  }, [editorInstance, externalCode]);
 
   const handleCodeChange = (value: string | undefined) => {
     const newCode = value || '';
@@ -239,9 +236,16 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
       )}
 
       {/* Code Editor */}
-      <div style={{ height, width: '100%' }} className="bg-gray-800 w-full h-full">
+      <div 
+        style={{ height, width: '100%' }} 
+        className="bg-gray-800 w-full h-full"
+        onClick={() => {
+          if (editorInstance) {
+            editorInstance.focus();
+          }
+        }}
+      >
         <Editor
-          key={`editor-${code?.length || 0}`}
           height="100%"
           width="100%"
           defaultLanguage="python"
@@ -250,8 +254,6 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
           onChange={handleCodeChange}
           onMount={(editor) => {
             console.log('Monaco Editor mounted successfully');
-            console.log('Initial code:', initialCode || DEFAULT_TEMPLATE);
-            console.log('Current code state:', code);
             setEditorInstance(editor);
             
             // Ensure the editor has the correct initial content
@@ -259,15 +261,23 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
             const targetValue = initialCode || DEFAULT_TEMPLATE;
             
             if (!editorValue || editorValue.trim() === '') {
-              console.log('Setting editor value to:', targetValue);
               editor.setValue(targetValue);
             }
             
-            // Trigger layout after a short delay to ensure proper sizing
+            // Focus the editor after mounting
             setTimeout(() => {
+              editor.focus();
               editor.layout();
-              console.log('Editor layout triggered');
             }, 100);
+            
+            // Prevent editor from losing focus during typing
+            editor.onDidFocusEditorText(() => {
+              console.log('Editor focused');
+            });
+            
+            editor.onDidBlurEditorText(() => {
+              console.log('Editor blurred');
+            });
           }}
           theme="vs-dark"
           options={{
@@ -293,6 +303,19 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
             cursorSmoothCaretAnimation: 'on',
             renderWhitespace: 'selection',
             renderControlCharacters: false,
+            // Focus and interaction options
+            acceptSuggestionOnEnter: 'on',
+            acceptSuggestionOnCommitCharacter: true,
+            acceptSuggestionOnType: true,
+            autoClosingBrackets: 'languageDefined',
+            autoClosingQuotes: 'languageDefined',
+            autoIndent: 'full',
+            autoSurround: 'languageDefined',
+            // Prevent focus issues
+            disableLayerHinting: true,
+            disableMonospaceOptimizations: true,
+            enableSplitViewResizing: false,
+            fixedOverflowWidgets: true,
           }}
         />
       </div>
