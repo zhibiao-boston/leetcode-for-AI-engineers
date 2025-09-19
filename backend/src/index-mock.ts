@@ -11,6 +11,7 @@ import { errorHandler, notFound, corsOptions } from './middleware/auth.middlewar
 import authRoutes from './routes/auth.routes';
 import adminRoutes from './routes/admin.routes';
 import submissionRoutes from './routes/submission.routes';
+import publicRoutes from './routes/public.routes';
 
 const app = express();
 
@@ -73,6 +74,7 @@ app.get('/test', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/submissions', submissionRoutes);
+app.use('/api', publicRoutes);
 
 // 404 handler
 app.use(notFound);

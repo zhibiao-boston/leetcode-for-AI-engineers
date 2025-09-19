@@ -24,7 +24,7 @@ router.post('/problems', [
 ], ProblemController.createProblem);
 
 router.put('/problems/:id', [
-  param('id').isUUID().withMessage('Invalid problem ID'),
+  param('id').notEmpty().withMessage('Invalid problem ID'),
   body('title').optional().notEmpty(),
   body('description').optional().notEmpty(),
   body('difficulty').optional().isIn(['easy', 'medium', 'hard']),
@@ -35,11 +35,11 @@ router.put('/problems/:id', [
 ], ProblemController.updateProblem);
 
 router.delete('/problems/:id', [
-  param('id').isUUID().withMessage('Invalid problem ID')
+  param('id').notEmpty().withMessage('Invalid problem ID')
 ], ProblemController.deleteProblem);
 
 router.patch('/problems/:id/status', [
-  param('id').isUUID().withMessage('Invalid problem ID'),
+  param('id').notEmpty().withMessage('Invalid problem ID'),
   body('status').isIn(['draft', 'published', 'archived']).withMessage('Invalid status')
 ], ProblemController.updateProblemStatus);
 

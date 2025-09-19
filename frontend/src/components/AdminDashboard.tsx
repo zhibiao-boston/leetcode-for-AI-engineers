@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import CreateProblemModal from './CreateProblemModal';
+import { useProblems } from '../contexts/ProblemContext';
+import { useNotifications } from '../contexts/NotificationContext';
+import AddProblemModal from './AddProblemModal';
 import EditProblemModal from './EditProblemModal';
+import DeleteConfirmationModal from './DeleteConfirmationModal';
 import ProblemsManagementTab from './ProblemsManagementTab';
 import SolutionsManagementTab from './SolutionsManagementTab';
 import AnalyticsTab from './AnalyticsTab';
@@ -40,13 +43,17 @@ interface AdminSolution {
 
 const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
+  const { problems: contextProblems, addProblem, updateProblem, removeProblem } = useProblems();
+  const { addNotification } = useNotifications();
   const [problems, setProblems] = useState<Problem[]>([]);
   const [solutions] = useState<AdminSolution[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'problems' | 'solutions' | 'analytics'>('problems');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [editingProblem, setEditingProblem] = useState<Problem | null>(null);
+  const [deletingProblem, setDeletingProblem] = useState<Problem | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'published' | 'draft' | 'archived'>('all');
 
@@ -85,12 +92,20 @@ const AdminDashboard: React.FC = () => {
     setShowEditModal(true);
   };
 
-  const handleDeleteProblem = async (problemId: string) => {
-    if (!window.confirm('Are you sure you want to delete this problem?')) return;
+  const handleDeleteProblem = (problemId: string) => {
+    const problem = problems.find(p => p.id === problemId);
+    if (problem) {
+      setDeletingProblem(problem);
+      setShowDeleteModal(true);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingProblem) return;
 
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:5000/api/admin/problems/${problemId}`, {
+      const response = await fetch(`http://localhost:5000/api/admin/problems/${deletingProblem.id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -99,10 +114,27 @@ const AdminDashboard: React.FC = () => {
       });
 
       if (response.ok) {
-        setProblems(problems.filter(p => p.id !== problemId));
+        setProblems(problems.filter(p => p.id !== deletingProblem.id));
+        
+        // Update context for real-time sync
+        removeProblem(deletingProblem.id);
+        
+        addNotification({
+          type: 'success',
+          title: 'Problem Deleted',
+          message: `"${deletingProblem.title}" has been permanently deleted.`
+        });
+        
+        setShowDeleteModal(false);
+        setDeletingProblem(null);
       }
     } catch (error) {
       console.error('Failed to delete problem:', error);
+      addNotification({
+        type: 'error',
+        title: 'Failed to Delete Problem',
+        message: error instanceof Error ? error.message : 'An unexpected error occurred.'
+      });
     }
   };
 
@@ -123,6 +155,115 @@ const AdminDashboard: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to update problem status:', error);
+    }
+  };
+
+  // Create new problem
+  const handleCreateProblem = () => {
+    setShowCreateModal(true);
+  };
+
+  // Save new problem
+  const handleSaveProblem = async (problemData: any) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch('http://localhost:5000/api/admin/problems', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(problemData)
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const newProblem = data.data;
+        setProblems(prev => [newProblem, ...prev]);
+        
+        // Update context for real-time sync
+        if (newProblem.status === 'published') {
+          addProblem(newProblem);
+          addNotification({
+            type: 'success',
+            title: 'Problem Published',
+            message: `"${newProblem.title}" has been published and is now visible on the home page.`
+          });
+        } else {
+          addNotification({
+            type: 'success',
+            title: 'Problem Created',
+            message: `"${newProblem.title}" has been saved as a draft.`
+          });
+        }
+        
+        setShowCreateModal(false);
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create problem');
+      }
+    } catch (error) {
+      console.error('Failed to create problem:', error);
+      addNotification({
+        type: 'error',
+        title: 'Failed to Create Problem',
+        message: error instanceof Error ? error.message : 'An unexpected error occurred.'
+      });
+      throw error;
+    }
+  };
+
+  // Save edited problem
+  const handleSaveEditedProblem = async (problemData: any) => {
+    if (!editingProblem) return;
+
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch(`http://localhost:5000/api/admin/problems/${editingProblem.id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(problemData)
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const updatedProblem = data.data;
+        setProblems(prev => prev.map(p => p.id === editingProblem.id ? updatedProblem : p));
+        
+        // Update context for real-time sync
+        if (updatedProblem.status === 'published') {
+          updateProblem(updatedProblem);
+        } else {
+          // Remove from context if status changed from published
+          const originalProblem = problems.find(p => p.id === editingProblem.id);
+          if (originalProblem?.status === 'published') {
+            removeProblem(updatedProblem.id);
+          }
+        }
+        
+        addNotification({
+          type: 'success',
+          title: 'Problem Updated',
+          message: `"${updatedProblem.title}" has been updated successfully.`
+        });
+        
+        setShowEditModal(false);
+        setEditingProblem(null);
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update problem');
+      }
+    } catch (error) {
+      console.error('Failed to update problem:', error);
+      addNotification({
+        type: 'error',
+        title: 'Failed to Update Problem',
+        message: error instanceof Error ? error.message : 'An unexpected error occurred.'
+      });
+      throw error;
     }
   };
 
@@ -206,7 +347,7 @@ const AdminDashboard: React.FC = () => {
           setSearchTerm={setSearchTerm}
           filterStatus={filterStatus}
           setFilterStatus={setFilterStatus}
-          onCreateProblem={() => setShowCreateModal(true)}
+          onCreateProblem={handleCreateProblem}
         />
       )}
 
@@ -223,30 +364,38 @@ const AdminDashboard: React.FC = () => {
         <AnalyticsTab problems={problems} solutions={solutions} />
       )}
 
-      {/* Create Problem Modal */}
+      {/* Add Problem Modal */}
       {showCreateModal && (
-        <CreateProblemModal
+        <AddProblemModal
+          isOpen={showCreateModal}
           onClose={() => setShowCreateModal(false)}
-          onSuccess={() => {
-            setShowCreateModal(false);
-            fetchProblems();
-          }}
+          onSave={handleSaveProblem}
         />
       )}
 
       {/* Edit Problem Modal */}
       {showEditModal && editingProblem && (
         <EditProblemModal
-          problem={editingProblem}
+          isOpen={showEditModal}
           onClose={() => {
             setShowEditModal(false);
             setEditingProblem(null);
           }}
-          onSuccess={() => {
-            setShowEditModal(false);
-            setEditingProblem(null);
-            fetchProblems();
+          onSave={handleSaveEditedProblem}
+          problem={editingProblem}
+        />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && deletingProblem && (
+        <DeleteConfirmationModal
+          isOpen={showDeleteModal}
+          onClose={() => {
+            setShowDeleteModal(false);
+            setDeletingProblem(null);
           }}
+          onConfirm={handleConfirmDelete}
+          problem={deletingProblem}
         />
       )}
     </div>

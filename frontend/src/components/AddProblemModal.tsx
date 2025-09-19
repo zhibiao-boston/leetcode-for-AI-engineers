@@ -1,21 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
-interface Problem {
-  id: string;
-  title: string;
-  description: string;
-  difficulty: 'easy' | 'medium' | 'hard';
-  company?: string;
-  categories: string[];
-  tags: string[];
-  status: 'draft' | 'published' | 'archived';
-}
-
-interface EditProblemModalProps {
+interface AddProblemModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (problemData: ProblemData) => Promise<void>;
-  problem: Problem | null;
 }
 
 interface ProblemData {
@@ -25,10 +13,10 @@ interface ProblemData {
   company?: string;
   categories: string[];
   tags: string[];
-  status: 'draft' | 'published' | 'archived';
+  status: 'draft' | 'published';
 }
 
-const EditProblemModal: React.FC<EditProblemModalProps> = ({ isOpen, onClose, onSave, problem }) => {
+const AddProblemModal: React.FC<AddProblemModalProps> = ({ isOpen, onClose, onSave }) => {
   const [formData, setFormData] = useState<ProblemData>({
     title: '',
     description: '',
@@ -49,22 +37,6 @@ const EditProblemModal: React.FC<EditProblemModalProps> = ({ isOpen, onClose, on
     { value: 'medium', label: 'Medium' },
     { value: 'hard', label: 'Hard' }
   ];
-
-  // Populate form when problem changes
-  useEffect(() => {
-    if (problem) {
-      setFormData({
-        title: problem.title,
-        description: problem.description,
-        difficulty: problem.difficulty,
-        company: problem.company || '',
-        categories: problem.categories,
-        tags: problem.tags,
-        status: problem.status
-      });
-      setTagsInput(problem.tags.join(', '));
-    }
-  }, [problem]);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -112,32 +84,42 @@ const EditProblemModal: React.FC<EditProblemModalProps> = ({ isOpen, onClose, on
     setFormData(prev => ({ ...prev, tags }));
   };
 
-  const handleSave = async () => {
+  const handleSave = async (status: 'draft' | 'published') => {
     if (!validateForm()) return;
 
     setIsLoading(true);
     try {
-      await onSave(formData);
+      await onSave({ ...formData, status });
       handleClose();
     } catch (error) {
-      console.error('Error updating problem:', error);
+      console.error('Error saving problem:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleClose = () => {
+    setFormData({
+      title: '',
+      description: '',
+      difficulty: 'medium',
+      company: '',
+      categories: [],
+      tags: [],
+      status: 'draft'
+    });
+    setTagsInput('');
     setErrors({});
     onClose();
   };
 
-  if (!isOpen || !problem) return null;
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-gray-800 rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-semibold text-white">Edit Problem</h2>
+          <h2 className="text-xl font-semibold text-white">Add New Problem</h2>
           <button
             onClick={handleClose}
             className="text-gray-400 hover:text-white transition-colors duration-200"
@@ -268,7 +250,6 @@ const EditProblemModal: React.FC<EditProblemModalProps> = ({ isOpen, onClose, on
             >
               <option value="draft">Draft</option>
               <option value="published">Published</option>
-              <option value="archived">Archived</option>
             </select>
           </div>
         </form>
@@ -283,11 +264,18 @@ const EditProblemModal: React.FC<EditProblemModalProps> = ({ isOpen, onClose, on
             Cancel
           </button>
           <button
-            onClick={handleSave}
+            onClick={() => handleSave('draft')}
+            className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-400 transition-colors duration-200"
+            disabled={isLoading}
+          >
+            {isLoading ? 'Saving...' : 'Save as Draft'}
+          </button>
+          <button
+            onClick={() => handleSave('published')}
             className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors duration-200"
             disabled={isLoading}
           >
-            {isLoading ? 'Saving...' : 'Save Changes'}
+            {isLoading ? 'Publishing...' : 'Publish'}
           </button>
         </div>
       </div>
@@ -295,4 +283,4 @@ const EditProblemModal: React.FC<EditProblemModalProps> = ({ isOpen, onClose, on
   );
 };
 
-export default EditProblemModal;
+export default AddProblemModal;

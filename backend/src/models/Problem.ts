@@ -13,9 +13,9 @@ export interface Problem {
   tags: string[];
   status: 'draft' | 'published' | 'archived';
   created_by: string;
-  created_at: Date;
-  updated_at: Date;
-  published_at?: Date;
+  created_at: string | Date;
+  updated_at: string | Date;
+  published_at?: string | Date;
   solutions?: AdminSolution[];
 }
 
@@ -27,6 +27,7 @@ export interface CreateProblemData {
   company?: string;
   categories: string[];
   tags: string[];
+  status?: 'draft' | 'published' | 'archived';
   created_by: string;
 }
 
@@ -43,17 +44,32 @@ export interface UpdateProblemData {
 export class ProblemModel {
   // Create a new problem
   static async create(problemData: CreateProblemData): Promise<Problem> {
-    const { external_id, title, description, difficulty, company, categories, tags, created_by } = problemData;
+    const { external_id, title, description, difficulty, company, categories, tags, created_by, status = 'draft' } = problemData;
     
-    const query = `
-      INSERT INTO problems (external_id, title, description, difficulty, company, categories, tags, created_by)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-      RETURNING *
-    `;
+    // Generate new ID
+    const newId = (mockProblems.length + 1).toString();
+    const now = new Date();
     
-    const values = [external_id, title, description, difficulty, company, categories, tags, created_by];
-    const result = await pool.query(query, values);
-    return result.rows[0];
+    const newProblem = {
+      id: newId,
+      external_id: external_id || `problem_${newId}`,
+      title,
+      description,
+      difficulty,
+      company: company || '',
+      categories: categories || [],
+      tags: tags || [],
+      status,
+      created_by: created_by || '1',
+      created_at: now,
+      updated_at: now,
+      published_at: status === 'published' ? now : new Date()
+    };
+    
+    // Add to mock data
+    mockProblems.push(newProblem);
+    
+    return newProblem;
   }
 
   // Find problem by ID
@@ -125,18 +141,22 @@ export class ProblemModel {
 
   // Update problem
   static async update(id: string, problemData: UpdateProblemData): Promise<Problem> {
-    const fields = Object.keys(problemData).map((key, index) => `${key} = $${index + 2}`);
-    const values = Object.values(problemData);
+    const problemIndex = mockProblems.findIndex(p => p.id === id);
+    if (problemIndex === -1) {
+      throw new Error('Problem not found');
+    }
     
-    const query = `
-      UPDATE problems 
-      SET ${fields.join(', ')}, updated_at = NOW()
-      WHERE id = $1
-      RETURNING *
-    `;
+    const now = new Date();
+    const updatedProblem = {
+      ...mockProblems[problemIndex],
+      ...problemData,
+      company: problemData.company || mockProblems[problemIndex].company || '',
+      updated_at: now,
+      published_at: problemData.status === 'published' ? now : mockProblems[problemIndex].published_at
+    };
     
-    const result = await pool.query(query, [id, ...values]);
-    return result.rows[0];
+    mockProblems[problemIndex] = updatedProblem;
+    return updatedProblem as Problem;
   }
 
   // Publish problem
@@ -167,9 +187,13 @@ export class ProblemModel {
 
   // Delete problem (soft delete)
   static async delete(id: string): Promise<boolean> {
-    const query = 'UPDATE problems SET updated_at = NOW() WHERE id = $1';
-    const result = await pool.query(query, [id]);
-    return (result.rowCount || 0) > 0;
+    const problemIndex = mockProblems.findIndex(p => p.id === id);
+    if (problemIndex === -1) {
+      return false;
+    }
+    
+    mockProblems.splice(problemIndex, 1);
+    return true;
   }
 
   // Count problems by status
