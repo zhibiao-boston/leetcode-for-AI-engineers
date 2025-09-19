@@ -175,31 +175,17 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
         const editorElement = editorInstance.getDomNode();
         if (editorElement) {
           editorElement.style.width = '100%';
-          editorElement.style.minWidth = '100%';
-          editorElement.style.maxWidth = '100%';
-          editorElement.style.flex = '1';
-          editorElement.style.display = 'flex';
-          editorElement.style.flexDirection = 'column';
+          editorElement.style.height = '100%';
           
           // Also set the parent container
           const parentElement = editorElement.parentElement;
           if (parentElement) {
             parentElement.style.width = '100%';
-            parentElement.style.minWidth = '100%';
-            parentElement.style.maxWidth = '100%';
-            parentElement.style.flex = '1';
-          }
-          
-          // Set the root container as well
-          const rootElement = editorElement.closest('.w-full.h-full') as HTMLElement;
-          if (rootElement) {
-            rootElement.style.width = '100%';
-            rootElement.style.minWidth = '100%';
-            rootElement.style.maxWidth = '100%';
+            parentElement.style.height = '100%';
           }
         }
         
-        // Force layout again after style changes
+        // Force layout again
         setTimeout(() => {
           editorInstance.layout();
         }, 50);
@@ -231,7 +217,25 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
     if (editorInstance && layoutTrigger > 0) {
       setTimeout(() => {
         editorInstance.layout();
-      }, 50);
+        
+        // Force the editor to take full width when layout changes
+        const editorElement = editorInstance.getDomNode();
+        if (editorElement) {
+          editorElement.style.width = '100%';
+          editorElement.style.height = '100%';
+          
+          const parentElement = editorElement.parentElement;
+          if (parentElement) {
+            parentElement.style.width = '100%';
+            parentElement.style.height = '100%';
+          }
+        }
+        
+        // Second layout call after DOM changes
+        setTimeout(() => {
+          editorInstance.layout();
+        }, 50);
+      }, 200);
     }
   }, [editorInstance, layoutTrigger]);
 
@@ -310,10 +314,8 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
 
   return (
     <div 
-      className={`w-full h-full transition-colors duration-200 ${
-        theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'
-      }`}
-      style={{ width: '100%', minWidth: '100%', maxWidth: '100%' }}
+      className="w-full h-full flex flex-col"
+      style={{ width: '100%', minWidth: '100%', maxWidth: '100%', height: '100%', minHeight: '100%' }}
     >
       {/* Editor Header - Conditional rendering */}
       {showHeader && (
@@ -340,10 +342,8 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
 
       {/* Code Editor */}
       <div 
-        style={{ height, width: '100%', minWidth: '100%', maxWidth: '100%' }} 
-        className={`w-full h-full transition-colors duration-200 ${
-          theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'
-        }`}
+        style={{ height, width: '100%' }} 
+        className="w-full h-full"
         onClick={() => {
           if (editorInstance) {
             editorInstance.focus();
@@ -378,31 +378,17 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
               const editorElement = editor.getDomNode();
               if (editorElement) {
                 editorElement.style.width = '100%';
-                editorElement.style.minWidth = '100%';
-                editorElement.style.maxWidth = '100%';
-                editorElement.style.flex = '1';
-                editorElement.style.display = 'flex';
-                editorElement.style.flexDirection = 'column';
+                editorElement.style.height = '100%';
                 
                 // Also set the parent container
                 const parentElement = editorElement.parentElement;
                 if (parentElement) {
                   parentElement.style.width = '100%';
-                  parentElement.style.minWidth = '100%';
-                  parentElement.style.maxWidth = '100%';
-                  parentElement.style.flex = '1';
-                }
-                
-                // Set the root container as well
-                const rootElement = editorElement.closest('.w-full.h-full') as HTMLElement;
-                if (rootElement) {
-                  rootElement.style.width = '100%';
-                  rootElement.style.minWidth = '100%';
-                  rootElement.style.maxWidth = '100%';
+                  parentElement.style.height = '100%';
                 }
               }
               
-              // Force layout again after style changes
+              // Force layout again
               setTimeout(() => {
                 editor.layout();
               }, 50);
@@ -423,9 +409,13 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
             minimap: { enabled: false },
             scrollBeyondLastLine: false,
             automaticLayout: true,
+            overviewRulerLanes: 0,
+            hideCursorInOverviewRuler: true,
+            overviewRulerBorder: false,
             tabSize: 4,
             insertSpaces: true,
             wordWrap: 'on',
+            wordWrapColumn: 120,
             lineNumbers: 'on',
             folding: true,
             lineDecorationsWidth: 0,
@@ -433,6 +423,16 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
             readOnly: false,
             selectOnLineNumbers: true,
             roundedSelection: false,
+            padding: { top: 10, bottom: 10 },
+            scrollbar: {
+              vertical: 'auto',
+              horizontal: 'auto',
+              useShadows: false,
+              verticalHasArrows: false,
+              horizontalHasArrows: false,
+              verticalScrollbarSize: 14,
+              horizontalScrollbarSize: 14
+            },
             cursorStyle: 'line',
             contextmenu: true,
             mouseWheelZoom: true,

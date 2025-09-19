@@ -30,7 +30,7 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
 }) => {
   const { token, user } = useAuth();
   const { theme } = useTheme();
-  const [activeTab, setActiveTab] = useState<'description' | 'submissions'>('description');
+  const [activeTab, setActiveTab] = useState<'description' | 'submissions' | 'results'>('description');
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loadingSubmissions, setLoadingSubmissions] = useState(false);
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
@@ -55,11 +55,17 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
   const [currentCode, setCurrentCode] = useState<string>('');
   const [isRunning, setIsRunning] = useState(false);
   const [layoutTrigger, setLayoutTrigger] = useState(0);
-  
-  // Code execution output state
-  const [codeOutput, setCodeOutput] = useState<string>('');
-  const [executionTime, setExecutionTime] = useState<number | null>(null);
-  const [codeError, setCodeError] = useState<string | null>(null);
+  const [runResults, setRunResults] = useState<{
+    output: string;
+    error?: string;
+    executionTime: number;
+    testResults?: Array<{
+      input: string;
+      expectedOutput: string;
+      actualOutput: string;
+      passed: boolean;
+    }>;
+  } | null>(null);
 
   const getTestCases = (question: Question | null) => {
     if (!question || !question.testCases) return [];
@@ -74,7 +80,7 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
     if (!question) return '';
     
     if (language === 'java') {
-      return question.template || `public class Solution {
+      return question.javaTemplate || `public class Solution {
     public void solve() {
         // Your Java code here
         
@@ -86,7 +92,7 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
     }
 }`;
     } else if (language === 'cpp') {
-      return question.template || `#include <iostream>
+      return question.cppTemplate || `#include <iostream>
 #include <vector>
 #include <string>
 using namespace std;
@@ -167,12 +173,42 @@ if __name__ == "__main__":
       executionTime: number;
     }> = {};
     
+    const testResults: Array<{
+      input: string;
+      expectedOutput: string;
+      actualOutput: string;
+      passed: boolean;
+    }> = [];
+    
+    let totalExecutionTime = 0;
+    
     testCases.forEach(testCase => {
       const result = executeSingleTestCase(testCase, code);
       results[testCase.id] = result;
+      
+      // Add to test results for the Results tab
+      testResults.push({
+        input: testCase.input,
+        expectedOutput: testCase.expectedOutput,
+        actualOutput: result.actualOutput,
+        passed: result.passed
+      });
+      
+      totalExecutionTime += result.executionTime;
     });
     
     setTestCaseResults(results);
+    
+    // Save results for the Results tab
+    const allPassed = testResults.every(tr => tr.passed);
+    setRunResults({
+      output: allPassed ? 'All test cases passed!' : 'Some test cases failed.',
+      executionTime: totalExecutionTime,
+      testResults: testResults
+    });
+    
+    // Switch to Results tab
+    setActiveTab('results');
   };
 
   // Create submission record
@@ -220,86 +256,17 @@ if __name__ == "__main__":
     }
   };
 
-  // Simulate code execution
-  const simulateCodeExecution = async (code: string, language: string): Promise<{ output: string; error?: string }> => {
-    // Simulate execution delay
-    await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 1200));
-    
-    // Check for common syntax errors
-    if (code.includes('syntax error') || code.includes('SyntaxError')) {
-      return { output: '', error: 'SyntaxError: Invalid syntax detected' };
-    }
-    
-    // Simple simulation based on language and code content
-    if (language === 'python') {
-      if (code.includes('print(')) {
-        const printMatches = code.match(/print\(['"`]([^'"`]*)['"`]\)/g);
-        if (printMatches) {
-          const outputs = printMatches.map(match => {
-            const content = match.match(/print\(['"`]([^'"`]*)['"`]\)/);
-            return content ? content[1] : 'Output';
-          });
-          return { output: outputs.join('\n') + '\n\nExecution completed successfully.' };
-        }
-        return { output: 'Hello, World!\nExecution completed successfully.' };
-      } else if (code.includes('def ') || code.includes('class ')) {
-        return { output: 'Code compiled successfully.\nFunction/Class defined.\nReady for execution.' };
-      } else if (code.includes('pass')) {
-        return { output: 'Code structure detected.\nImplement your solution to see results.' };
-      } else {
-        return { output: 'Code executed successfully.\nNo output generated.' };
-      }
-    } else if (language === 'java') {
-      if (code.includes('System.out.println')) {
-        return { output: 'Java code compiled and executed successfully.\nOutput: Hello, World!' };
-      }
-      return { output: 'Java code compiled successfully.\nReady for execution.' };
-    } else if (language === 'cpp') {
-      if (code.includes('cout')) {
-        return { output: 'C++ code compiled and executed successfully.\nOutput: Hello, World!' };
-      }
-      return { output: 'C++ code compiled successfully.\nReady for execution.' };
-    }
-    
-    return { output: 'Code executed successfully.' };
-  };
-
   const handleCodeRun = async (code: string) => {
-    if (!code.trim()) {
-      setCodeError('No code to execute');
-      return;
-    }
-
     setIsRunning(true);
-    setCodeError(null);
-    setCodeOutput('');
-    setExecutionTime(null);
     
-    try {
-      const startTime = Date.now();
-      
-      // Simulate code execution
-      const result = await simulateCodeExecution(code, selectedLanguage);
-      
-      const execTime = Date.now() - startTime;
-      
-      setCodeOutput(result.output);
-      setExecutionTime(execTime);
-      
-      if (result.error) {
-        setCodeError(result.error);
-      }
-      
-      // Also execute test cases for comprehensive feedback
-      executeAllTestCases(code);
-      
-      // Create submission record
-      await createSubmission(code, result.error ? 'Runtime Error' : 'Accepted');
-    } catch (error) {
-      setCodeError(error instanceof Error ? error.message : 'Execution failed');
-    } finally {
+    // Execute test cases
+    executeAllTestCases(code);
+    
+    // Simulate some processing time
+    setTimeout(async () => {
+      await createSubmission(code, 'Accepted');
       setIsRunning(false);
-    }
+    }, 1000);
   };
 
   const fetchSubmissions = useCallback(async () => {
@@ -346,6 +313,11 @@ if __name__ == "__main__":
     }
   }, [question, selectedLanguage, fetchSubmissions]);
 
+  // Force layout trigger when question list visibility changes
+  useEffect(() => {
+    setLayoutTrigger(prev => prev + 1);
+  }, [isQuestionListVisible]);
+
   useEffect(() => {
     setLayoutTrigger(prev => prev + 1);
   }, []);
@@ -389,7 +361,7 @@ if __name__ == "__main__":
             )}
             
             <div className="flex items-center space-x-3">
-              <span className="text-lg font-semibold">{question.title}</span>
+              <span className="text-lg font-semibold">{question.id}. {question.title}</span>
               <span className={`px-2 py-1 text-xs rounded font-medium ${
                 question.difficulty === 'easy' 
                   ? 'bg-green-100 text-green-800' 
@@ -438,7 +410,7 @@ if __name__ == "__main__":
       <div className="flex-1 flex overflow-hidden">
         {/* Left Panel - Question Description */}
         <div 
-          className={`w-1/2 border-r overflow-hidden transition-colors duration-200 ${
+          className={`${isQuestionListVisible ? 'w-1/3' : 'w-1/4'} border-r overflow-hidden transition-colors duration-200 ${
             theme === 'dark' ? 'border-gray-700' : 'border-gray-200'
           }`}
         >
@@ -474,6 +446,24 @@ if __name__ == "__main__":
             }`}
           >
             Submissions ({submissions.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('results')}
+                className={`px-4 py-3 text-sm font-medium border-b-2 transition-all duration-200 ${
+              activeTab === 'results'
+                    ? theme === 'dark'
+                      ? 'border-blue-400 text-blue-400'
+                      : 'border-blue-500 text-blue-600'
+                    : theme === 'dark'
+                      ? 'border-transparent text-gray-400 hover:text-gray-300'
+                      : 'border-transparent text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Results {runResults && (
+              <span className={`ml-1 ${runResults.testResults?.every(t => t.passed) ? 'text-green-500' : 'text-red-500'}`}>
+                ({runResults.testResults?.filter(t => t.passed).length || 0}/{runResults.testResults?.length || 0})
+              </span>
+            )}
           </button>
         </div>
       </div>
@@ -563,7 +553,7 @@ if __name__ == "__main__":
               </div>
               )}
             </div>
-          ) : (
+          ) : activeTab === 'submissions' ? (
             // Submissions tab content
             <div className="space-y-4">
               {loadingSubmissions ? (
@@ -583,7 +573,10 @@ if __name__ == "__main__":
                   {Array.isArray(submissions) && submissions.map((submission, index) => (
                     <div
                       key={submission.id}
-                      onClick={() => setSelectedSubmission(submission)}
+                      onClick={() => {
+                        setSelectedSubmission(submission);
+                        setCurrentCode(submission.code); // Update current code state to match the selected submission
+                      }}
                       className={`p-3 border rounded cursor-pointer transition-colors duration-200 ${
                         selectedSubmission?.id === submission.id
                           ? theme === 'dark'
@@ -622,12 +615,161 @@ if __name__ == "__main__":
                 </div>
               )}
             </div>
+          ) : (
+            // Results tab content - LeetCode style
+            <div className="h-full flex flex-col">
+              {!runResults ? (
+                <div className="flex-1 flex items-center justify-center">
+                  <div className={`text-center ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <div className="text-lg mb-2">No test results yet</div>
+                    <div className="text-sm">Click "Run Code" or "Test Code" to see results.</div>
+                  </div>
+                </div>
+              ) : (
+                <div className="h-full flex flex-col">
+                  {/* Header with overall status */}
+                  <div className={`px-4 py-3 border-b ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
+                    <div className="flex items-center space-x-3">
+                      {runResults.testResults?.every(t => t.passed) ? (
+                        <>
+                          <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
+                            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                          <span className="text-green-600 font-medium text-lg">Accepted</span>
+                        </>
+                      ) : (
+                        <>
+                          <div className="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center">
+                            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                          <span className="text-red-600 font-medium text-lg">Wrong Answer</span>
+                        </>
+                      )}
+                      <span className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                        {runResults.testResults?.filter(t => t.passed).length || 0}/{runResults.testResults?.length || 0} testcases passed
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Content area */}
+                  <div className="flex-1 overflow-auto">
+                    {runResults.testResults && runResults.testResults.length > 0 && (
+                      <div className="p-4">
+                        {/* Test case that failed (if any) */}
+                        {runResults.testResults.some(t => !t.passed) && (
+                          <div className="mb-6">
+                            {runResults.testResults.map((testResult, index) => {
+                              if (testResult.passed) return null;
+                              return (
+                                <div key={index} className="space-y-4">
+                                  <div className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                                    Test case {index + 1}:
+                                  </div>
+                                  
+                                  <div className="space-y-3">
+                                    <div>
+                                      <div className={`text-xs font-medium mb-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                                        Input
+                                      </div>
+                                      <div className={`p-3 rounded font-mono text-sm border ${
+                                        theme === 'dark' ? 'bg-gray-800 border-gray-700 text-gray-100' : 'bg-gray-50 border-gray-200 text-gray-900'
+                                      }`}>
+                                        <pre className="whitespace-pre-wrap">{testResult.input}</pre>
+                                      </div>
+                                    </div>
+                                    
+                                    <div>
+                                      <div className={`text-xs font-medium mb-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                                        Output
+                                      </div>
+                                      <div className={`p-3 rounded font-mono text-sm border ${
+                                        theme === 'dark' ? 'bg-red-900/20 border-red-700 text-red-100' : 'bg-red-50 border-red-200 text-red-900'
+                                      }`}>
+                                        <pre className="whitespace-pre-wrap">{testResult.actualOutput}</pre>
+                                      </div>
+                                    </div>
+                                    
+                                    <div>
+                                      <div className={`text-xs font-medium mb-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                                        Expected
+                                      </div>
+                                      <div className={`p-3 rounded font-mono text-sm border ${
+                                        theme === 'dark' ? 'bg-green-900/20 border-green-700 text-green-100' : 'bg-green-50 border-green-200 text-green-900'
+                                      }`}>
+                                        <pre className="whitespace-pre-wrap">{testResult.expectedOutput}</pre>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        {/* All test cases passed */}
+                        {runResults.testResults.every(t => t.passed) && (
+                          <div className="text-center py-8">
+                            <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
+                              <svg className="w-8 h-8 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                            </div>
+                            <div className={`text-lg font-medium mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                              Success!
+                            </div>
+                            <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                              All test cases passed
+                            </div>
+                            <div className={`text-xs mt-2 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>
+                              Runtime: {runResults.executionTime}ms
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Footer with action buttons */}
+                  <div className={`px-4 py-3 border-t ${theme === 'dark' ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-gray-50'}`}>
+                    <div className="flex items-center justify-between">
+                      <button
+                        onClick={() => setActiveTab('description')}
+                        className={`text-sm px-3 py-1 rounded transition-colors duration-200 ${
+                          theme === 'dark'
+                            ? 'text-blue-400 hover:bg-blue-900/20'
+                            : 'text-blue-600 hover:bg-blue-50'
+                        }`}
+                      >
+                        Back to Problem
+                      </button>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => executeAllTestCases(currentCode || getTemplateForQuestion(question, selectedLanguage))}
+                          disabled={isRunning}
+                          className={`text-sm px-3 py-1 rounded transition-colors duration-200 ${
+                            theme === 'dark'
+                              ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                          }`}
+                        >
+                          {isRunning ? 'Running...' : 'Run Again'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           )}
                 </div>
               </div>
 
               {/* Right Panel - Code Editor */}
-        <div className="w-1/2 flex flex-col">
+        <div className={`${isQuestionListVisible ? 'w-2/3' : 'w-3/4'} flex flex-col`}>
           {/* Editor Header */}
           <div className={`border-b px-4 py-3 transition-colors duration-200 ${
             theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'
@@ -650,61 +792,54 @@ if __name__ == "__main__":
                   <option value="java">{languageConfig.java.name}</option>
                   <option value="cpp">{languageConfig.cpp.name}</option>
                 </select>
-                <div className={`w-2 h-2 rounded-full bg-green-500`}></div>
-                <span className={`text-xs transition-colors duration-200 ${
-                  theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                }`}>Auto</span>
+                
+                {/* Viewing History Indicator and Reset Button */}
+                {selectedSubmission ? (
+                  <>
+                    <span className={`text-xs px-2 py-1 rounded ${
+                      theme === 'dark' ? 'bg-blue-900/30 text-blue-300' : 'bg-blue-100 text-blue-700'
+                    }`}>
+                      查看历史提交
+                            </span>
+                          <button
+                      onClick={() => {
+                        setSelectedSubmission(null);
+                        setCurrentCode(getTemplateForQuestion(question, selectedLanguage));
+                      }}
+                      className={`text-xs px-2 py-1 rounded transition-colors duration-200 ${
+                        theme === 'dark'
+                          ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      }`}
+                    >
+                      回到编辑
+                          </button>
+                  </>
+                ) : (
+                  <>
+                    <div className={`w-2 h-2 rounded-full bg-green-500`}></div>
+                    <span className={`text-xs transition-colors duration-200 ${
+                      theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                    }`}>Auto</span>
+                  </>
+                )}
                         </div>
                       </div>
                     </div>
                   
           <div className="flex-1 flex flex-col">
             {/* Code Editor */}
-            <div className="flex-1 w-full" style={{ width: '100%', minWidth: '100%', maxWidth: '100%' }}>
+            <div className="flex-1 w-full overflow-hidden" style={{ width: '100%', minWidth: '100%', maxWidth: '100%', flex: '1 1 auto', display: 'flex', flexDirection: 'column' }}>
                       <PythonEditor
                 initialCode={getTemplateForQuestion(question, selectedLanguage)}
                         onCodeChange={handleCodeChange}
-                height="70%"
+                height="100%"
                 showHeader={false}
                 language={selectedLanguage}
                         externalCode={selectedSubmission?.code}
                 layoutTrigger={layoutTrigger}
                       />
             </div>
-
-            {/* Code Execution Output */}
-            {(codeOutput || codeError) && (
-              <div className={`h-[30%] border-t p-4 transition-colors duration-200 ${
-                theme === 'dark' ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'
-              }`}>
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className={`text-sm font-medium transition-colors duration-200 ${
-                    theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-                  }`}>Output</h4>
-                  {executionTime && (
-                    <span className={`text-xs transition-colors duration-200 ${
-                      theme === 'dark' ? 'text-gray-500' : 'text-gray-600'
-                    }`}>
-                      Executed in {executionTime}ms
-                    </span>
-                  )}
-                </div>
-                
-                <div className={`h-full overflow-y-auto rounded border transition-colors duration-200 ${
-                  theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-300'
-                }`}>
-                  {codeError ? (
-                    <pre className="text-red-400 text-sm font-mono p-3 whitespace-pre-wrap">
-                      Error: {codeError}
-                    </pre>
-                  ) : (
-                    <pre className="text-green-400 text-sm font-mono p-3 whitespace-pre-wrap">
-                      {codeOutput}
-                    </pre>
-                  )}
-                </div>
-              </div>
-            )}
 
             {/* Test Cases Section - Bottom of right panel */}
             {question && getTestCases(question).length > 0 && (

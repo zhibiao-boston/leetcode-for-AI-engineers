@@ -73,11 +73,8 @@ const HomePage: React.FC = () => {
     };
   }, [refreshProblems]);
 
-  // Handle question selection and auto-hide list
   const handleSelectQuestion = (question: Question) => {
     setSelectedQuestion(question);
-    setIsQuestionListVisible(false); // Auto-hide list when question is selected
-    
     // Update URL with question ID
     const url = new URL(window.location.href);
     url.searchParams.set('question', question.id);
