@@ -28,7 +28,6 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
   isQuestionListVisible = true 
 }) => {
   const { token, user } = useAuth();
-  const [isRunning, setIsRunning] = useState(false);
   const [activeTab, setActiveTab] = useState<'description' | 'submissions'>('description');
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loadingSubmissions, setLoadingSubmissions] = useState(false);
@@ -184,7 +183,6 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
   };
 
   const handleCodeRun = async (code: string) => {
-    setIsRunning(true);
     try {
       const result = await executePythonCode(code);
       
@@ -192,8 +190,12 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
       await createSubmission(code, result);
       
       return result;
-    } finally {
-      setIsRunning(false);
+    } catch (error) {
+      return {
+        output: '',
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        executionTime: 0
+      };
     }
   };
 

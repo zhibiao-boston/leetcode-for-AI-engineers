@@ -216,8 +216,7 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
     <div className="bg-gray-800 w-full h-full">
       {/* Editor Header - Conditional rendering */}
       {showHeader && (
-        <div className="bg-gray-900 px-4 py-2 border-b border-gray-700 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-white">Code Editor</h2>
+        <div className="bg-gray-900 px-4 py-2 border-b border-gray-700 flex items-center justify-end">
           <div className="flex space-x-2">
             <button
               onClick={handleRun}
