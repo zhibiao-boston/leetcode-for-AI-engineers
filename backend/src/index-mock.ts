@@ -9,6 +9,7 @@ import { errorHandler, notFound, corsOptions } from './middleware/auth.middlewar
 
 // Import routes
 import authRoutes from './routes/auth.routes';
+import adminRoutes from './routes/admin.routes';
 
 const app = express();
 
@@ -69,6 +70,7 @@ app.get('/test', (req, res) => {
 
 // API routes
 app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
 
 // 404 handler
 app.use(notFound);
