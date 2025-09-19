@@ -29,8 +29,6 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
 }) => {
   const { token, user } = useAuth();
   const [isRunning, setIsRunning] = useState(false);
-  const [triggerRun, setTriggerRun] = useState(0);
-  const [triggerClear, setTriggerClear] = useState(0);
   const [activeTab, setActiveTab] = useState<'description' | 'submissions'>('description');
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loadingSubmissions, setLoadingSubmissions] = useState(false);
@@ -199,13 +197,6 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
     }
   };
 
-  const handleRun = () => {
-    setTriggerRun(prev => prev + 1);
-  };
-
-  const handleClear = () => {
-    setTriggerClear(prev => prev + 1);
-  };
 
   // Handle clicking on a submission to load code into editor
   const handleLoadSubmission = (submission: Submission) => {
@@ -338,21 +329,6 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
             </div>
           </div>
           
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={handleRun}
-              disabled={isRunning}
-              className="bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200"
-            >
-              {isRunning ? 'Running...' : 'Run Code'}
-            </button>
-            <button
-              onClick={handleClear}
-              className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200"
-            >
-              Clear
-            </button>
-          </div>
         </div>
       </div>
 
@@ -566,9 +542,7 @@ if __name__ == "__main__":
                 onCodeChange={handleCodeChange}
                 onRun={handleCodeRun}
                 height="100%"
-                showHeader={false}
-                triggerRun={triggerRun}
-                triggerClear={triggerClear}
+                showHeader={true}
                 externalCode={selectedSubmission?.code}
                 layoutTrigger={layoutTrigger}
               />
