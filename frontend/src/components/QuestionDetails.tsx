@@ -616,110 +616,151 @@ if __name__ == "__main__":
               )}
             </div>
           ) : (
-            // Results tab content
-            <div className="space-y-4">
+            // Results tab content - LeetCode style
+            <div className="h-full flex flex-col">
               {!runResults ? (
-                <div className="text-center py-8">
-                  <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-                    No test results yet. Click "Run Code" or "Test Code" to see results.
+                <div className="flex-1 flex items-center justify-center">
+                  <div className={`text-center ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <div className="text-lg mb-2">No test results yet</div>
+                    <div className="text-sm">Click "Run Code" or "Test Code" to see results.</div>
                   </div>
                 </div>
               ) : (
-                <div className="space-y-6">
-                  {/* Overall Result */}
-                  <div className={`p-4 rounded-lg border ${
-                    runResults.testResults?.every(t => t.passed)
-                      ? theme === 'dark'
-                        ? 'border-green-700 bg-green-900/20'
-                        : 'border-green-200 bg-green-50'
-                      : theme === 'dark'
-                        ? 'border-red-700 bg-red-900/20'
-                        : 'border-red-200 bg-red-50'
-                  }`}>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className={`w-4 h-4 rounded-full ${
-                          runResults.testResults?.every(t => t.passed) ? 'bg-green-500' : 'bg-red-500'
-                        }`}></div>
-                        <span className={`font-medium ${
-                          runResults.testResults?.every(t => t.passed)
-                            ? theme === 'dark' ? 'text-green-300' : 'text-green-700'
-                            : theme === 'dark' ? 'text-red-300' : 'text-red-700'
-                        }`}>
-                          {runResults.testResults?.every(t => t.passed) ? 'All Tests Passed' : 'Some Tests Failed'}
-                        </span>
-                      </div>
-                      <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-                        {runResults.testResults?.filter(t => t.passed).length || 0}/{runResults.testResults?.length || 0} passed
-                      </div>
-                    </div>
-                    <div className={`mt-2 text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-                      Total execution time: {runResults.executionTime}ms
+                <div className="h-full flex flex-col">
+                  {/* Header with overall status */}
+                  <div className={`px-4 py-3 border-b ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
+                    <div className="flex items-center space-x-3">
+                      {runResults.testResults?.every(t => t.passed) ? (
+                        <>
+                          <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
+                            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                          <span className="text-green-600 font-medium text-lg">Accepted</span>
+                        </>
+                      ) : (
+                        <>
+                          <div className="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center">
+                            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                          <span className="text-red-600 font-medium text-lg">Wrong Answer</span>
+                        </>
+                      )}
+                      <span className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                        {runResults.testResults?.filter(t => t.passed).length || 0}/{runResults.testResults?.length || 0} testcases passed
+                      </span>
                     </div>
                   </div>
 
-                  {/* Individual Test Results */}
-                  {runResults.testResults && runResults.testResults.map((testResult, index) => (
-                    <div key={index} className={`p-4 rounded-lg border ${
-                      testResult.passed
-                        ? theme === 'dark'
-                          ? 'border-green-700 bg-green-900/10'
-                          : 'border-green-200 bg-green-50'
-                        : theme === 'dark'
-                          ? 'border-red-700 bg-red-900/10'
-                          : 'border-red-200 bg-red-50'
-                    }`}>
-                      <div className="flex items-center space-x-3 mb-3">
-                        <div className={`w-4 h-4 rounded-full ${
-                          testResult.passed ? 'bg-green-500' : 'bg-red-500'
-                        }`}></div>
-                        <span className={`font-medium ${
-                          testResult.passed
-                            ? theme === 'dark' ? 'text-green-300' : 'text-green-700'
-                            : theme === 'dark' ? 'text-red-300' : 'text-red-700'
-                        }`}>
-                          Test Case {index + 1} - {testResult.passed ? 'PASS' : 'FAIL'}
-                        </span>
+                  {/* Content area */}
+                  <div className="flex-1 overflow-auto">
+                    {runResults.testResults && runResults.testResults.length > 0 && (
+                      <div className="p-4">
+                        {/* Test case that failed (if any) */}
+                        {runResults.testResults.some(t => !t.passed) && (
+                          <div className="mb-6">
+                            {runResults.testResults.map((testResult, index) => {
+                              if (testResult.passed) return null;
+                              return (
+                                <div key={index} className="space-y-4">
+                                  <div className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                                    Test case {index + 1}:
+                                  </div>
+                                  
+                                  <div className="space-y-3">
+                                    <div>
+                                      <div className={`text-xs font-medium mb-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                                        Input
+                                      </div>
+                                      <div className={`p-3 rounded font-mono text-sm border ${
+                                        theme === 'dark' ? 'bg-gray-800 border-gray-700 text-gray-100' : 'bg-gray-50 border-gray-200 text-gray-900'
+                                      }`}>
+                                        <pre className="whitespace-pre-wrap">{testResult.input}</pre>
+                                      </div>
+                                    </div>
+                                    
+                                    <div>
+                                      <div className={`text-xs font-medium mb-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                                        Output
+                                      </div>
+                                      <div className={`p-3 rounded font-mono text-sm border ${
+                                        theme === 'dark' ? 'bg-red-900/20 border-red-700 text-red-100' : 'bg-red-50 border-red-200 text-red-900'
+                                      }`}>
+                                        <pre className="whitespace-pre-wrap">{testResult.actualOutput}</pre>
+                                      </div>
+                                    </div>
+                                    
+                                    <div>
+                                      <div className={`text-xs font-medium mb-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                                        Expected
+                                      </div>
+                                      <div className={`p-3 rounded font-mono text-sm border ${
+                                        theme === 'dark' ? 'bg-green-900/20 border-green-700 text-green-100' : 'bg-green-50 border-green-200 text-green-900'
+                                      }`}>
+                                        <pre className="whitespace-pre-wrap">{testResult.expectedOutput}</pre>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        {/* All test cases passed */}
+                        {runResults.testResults.every(t => t.passed) && (
+                          <div className="text-center py-8">
+                            <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
+                              <svg className="w-8 h-8 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                            </div>
+                            <div className={`text-lg font-medium mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                              Success!
+                            </div>
+                            <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                              All test cases passed
+                            </div>
+                            <div className={`text-xs mt-2 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>
+                              Runtime: {runResults.executionTime}ms
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                          <div className={`text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-                            Input:
-                          </div>
-                          <div className={`p-2 rounded font-mono text-sm ${
-                            theme === 'dark' ? 'bg-gray-800 text-gray-100' : 'bg-gray-100 text-gray-800'
-                          }`}>
-                            {testResult.input}
-                          </div>
-                        </div>
-                        
-                        <div>
-                          <div className={`text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-                            Expected Output:
-                          </div>
-                          <div className={`p-2 rounded font-mono text-sm ${
-                            theme === 'dark' ? 'bg-gray-800 text-gray-100' : 'bg-gray-100 text-gray-800'
-                          }`}>
-                            {testResult.expectedOutput}
-                          </div>
-                        </div>
-                        
-                        <div>
-                          <div className={`text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-                            Your Output:
-                          </div>
-                          <div className={`p-2 rounded font-mono text-sm ${
-                            testResult.passed
-                              ? theme === 'dark' ? 'bg-green-900 text-green-100' : 'bg-green-100 text-green-800'
-                              : theme === 'dark' ? 'bg-red-900 text-red-100' : 'bg-red-100 text-red-800'
-                          }`}>
-                            {testResult.actualOutput}
-                          </div>
-                        </div>
+                    )}
+                  </div>
+
+                  {/* Footer with action buttons */}
+                  <div className={`px-4 py-3 border-t ${theme === 'dark' ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-gray-50'}`}>
+                    <div className="flex items-center justify-between">
+                      <button
+                        onClick={() => setActiveTab('description')}
+                        className={`text-sm px-3 py-1 rounded transition-colors duration-200 ${
+                          theme === 'dark'
+                            ? 'text-blue-400 hover:bg-blue-900/20'
+                            : 'text-blue-600 hover:bg-blue-50'
+                        }`}
+                      >
+                        Back to Problem
+                      </button>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => executeAllTestCases(currentCode || getTemplateForQuestion(question, selectedLanguage))}
+                          disabled={isRunning}
+                          className={`text-sm px-3 py-1 rounded transition-colors duration-200 ${
+                            theme === 'dark'
+                              ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                          }`}
+                        >
+                          {isRunning ? 'Running...' : 'Run Again'}
+                        </button>
                       </div>
                     </div>
-                  ))}
+                  </div>
                 </div>
               )}
             </div>
