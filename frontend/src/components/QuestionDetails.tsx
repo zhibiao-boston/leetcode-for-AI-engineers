@@ -30,7 +30,7 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
 }) => {
   const { token, user } = useAuth();
   const { theme } = useTheme();
-  const [activeTab, setActiveTab] = useState<'description' | 'submissions'>('description');
+  const [activeTab, setActiveTab] = useState<'description' | 'submissions' | 'results'>('description');
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loadingSubmissions, setLoadingSubmissions] = useState(false);
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
@@ -55,6 +55,17 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
   const [currentCode, setCurrentCode] = useState<string>('');
   const [isRunning, setIsRunning] = useState(false);
   const [layoutTrigger, setLayoutTrigger] = useState(0);
+  const [runResults, setRunResults] = useState<{
+    output: string;
+    error?: string;
+    executionTime: number;
+    testResults?: Array<{
+      input: string;
+      expectedOutput: string;
+      actualOutput: string;
+      passed: boolean;
+    }>;
+  } | null>(null);
 
   const getTestCases = (question: Question | null) => {
     if (!question || !question.testCases) return [];
@@ -162,12 +173,42 @@ if __name__ == "__main__":
       executionTime: number;
     }> = {};
     
+    const testResults: Array<{
+      input: string;
+      expectedOutput: string;
+      actualOutput: string;
+      passed: boolean;
+    }> = [];
+    
+    let totalExecutionTime = 0;
+    
     testCases.forEach(testCase => {
       const result = executeSingleTestCase(testCase, code);
       results[testCase.id] = result;
+      
+      // Add to test results for the Results tab
+      testResults.push({
+        input: testCase.input,
+        expectedOutput: testCase.expectedOutput,
+        actualOutput: result.actualOutput,
+        passed: result.passed
+      });
+      
+      totalExecutionTime += result.executionTime;
     });
     
     setTestCaseResults(results);
+    
+    // Save results for the Results tab
+    const allPassed = testResults.every(tr => tr.passed);
+    setRunResults({
+      output: allPassed ? 'All test cases passed!' : 'Some test cases failed.',
+      executionTime: totalExecutionTime,
+      testResults: testResults
+    });
+    
+    // Switch to Results tab
+    setActiveTab('results');
   };
 
   // Create submission record
@@ -406,6 +447,24 @@ if __name__ == "__main__":
           >
             Submissions ({submissions.length})
           </button>
+          <button
+            onClick={() => setActiveTab('results')}
+                className={`px-4 py-3 text-sm font-medium border-b-2 transition-all duration-200 ${
+              activeTab === 'results'
+                    ? theme === 'dark'
+                      ? 'border-blue-400 text-blue-400'
+                      : 'border-blue-500 text-blue-600'
+                    : theme === 'dark'
+                      ? 'border-transparent text-gray-400 hover:text-gray-300'
+                      : 'border-transparent text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Results {runResults && (
+              <span className={`ml-1 ${runResults.testResults?.every(t => t.passed) ? 'text-green-500' : 'text-red-500'}`}>
+                ({runResults.testResults?.filter(t => t.passed).length || 0}/{runResults.testResults?.length || 0})
+              </span>
+            )}
+          </button>
         </div>
       </div>
 
@@ -494,7 +553,7 @@ if __name__ == "__main__":
               </div>
               )}
             </div>
-          ) : (
+          ) : activeTab === 'submissions' ? (
             // Submissions tab content
             <div className="space-y-4">
               {loadingSubmissions ? (
@@ -556,6 +615,114 @@ if __name__ == "__main__":
                 </div>
               )}
             </div>
+          ) : (
+            // Results tab content
+            <div className="space-y-4">
+              {!runResults ? (
+                <div className="text-center py-8">
+                  <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                    No test results yet. Click "Run Code" or "Test Code" to see results.
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {/* Overall Result */}
+                  <div className={`p-4 rounded-lg border ${
+                    runResults.testResults?.every(t => t.passed)
+                      ? theme === 'dark'
+                        ? 'border-green-700 bg-green-900/20'
+                        : 'border-green-200 bg-green-50'
+                      : theme === 'dark'
+                        ? 'border-red-700 bg-red-900/20'
+                        : 'border-red-200 bg-red-50'
+                  }`}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-4 h-4 rounded-full ${
+                          runResults.testResults?.every(t => t.passed) ? 'bg-green-500' : 'bg-red-500'
+                        }`}></div>
+                        <span className={`font-medium ${
+                          runResults.testResults?.every(t => t.passed)
+                            ? theme === 'dark' ? 'text-green-300' : 'text-green-700'
+                            : theme === 'dark' ? 'text-red-300' : 'text-red-700'
+                        }`}>
+                          {runResults.testResults?.every(t => t.passed) ? 'All Tests Passed' : 'Some Tests Failed'}
+                        </span>
+                      </div>
+                      <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                        {runResults.testResults?.filter(t => t.passed).length || 0}/{runResults.testResults?.length || 0} passed
+                      </div>
+                    </div>
+                    <div className={`mt-2 text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                      Total execution time: {runResults.executionTime}ms
+                    </div>
+                  </div>
+
+                  {/* Individual Test Results */}
+                  {runResults.testResults && runResults.testResults.map((testResult, index) => (
+                    <div key={index} className={`p-4 rounded-lg border ${
+                      testResult.passed
+                        ? theme === 'dark'
+                          ? 'border-green-700 bg-green-900/10'
+                          : 'border-green-200 bg-green-50'
+                        : theme === 'dark'
+                          ? 'border-red-700 bg-red-900/10'
+                          : 'border-red-200 bg-red-50'
+                    }`}>
+                      <div className="flex items-center space-x-3 mb-3">
+                        <div className={`w-4 h-4 rounded-full ${
+                          testResult.passed ? 'bg-green-500' : 'bg-red-500'
+                        }`}></div>
+                        <span className={`font-medium ${
+                          testResult.passed
+                            ? theme === 'dark' ? 'text-green-300' : 'text-green-700'
+                            : theme === 'dark' ? 'text-red-300' : 'text-red-700'
+                        }`}>
+                          Test Case {index + 1} - {testResult.passed ? 'PASS' : 'FAIL'}
+                        </span>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <div className={`text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                            Input:
+                          </div>
+                          <div className={`p-2 rounded font-mono text-sm ${
+                            theme === 'dark' ? 'bg-gray-800 text-gray-100' : 'bg-gray-100 text-gray-800'
+                          }`}>
+                            {testResult.input}
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <div className={`text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                            Expected Output:
+                          </div>
+                          <div className={`p-2 rounded font-mono text-sm ${
+                            theme === 'dark' ? 'bg-gray-800 text-gray-100' : 'bg-gray-100 text-gray-800'
+                          }`}>
+                            {testResult.expectedOutput}
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <div className={`text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                            Your Output:
+                          </div>
+                          <div className={`p-2 rounded font-mono text-sm ${
+                            testResult.passed
+                              ? theme === 'dark' ? 'bg-green-900 text-green-100' : 'bg-green-100 text-green-800'
+                              : theme === 'dark' ? 'bg-red-900 text-red-100' : 'bg-red-100 text-red-800'
+                          }`}>
+                            {testResult.actualOutput}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           )}
                 </div>
               </div>
@@ -592,8 +759,8 @@ if __name__ == "__main__":
                       theme === 'dark' ? 'bg-blue-900/30 text-blue-300' : 'bg-blue-100 text-blue-700'
                     }`}>
                       查看历史提交
-                    </span>
-                    <button
+                            </span>
+                          <button
                       onClick={() => {
                         setSelectedSubmission(null);
                         setCurrentCode(getTemplateForQuestion(question, selectedLanguage));
@@ -605,7 +772,7 @@ if __name__ == "__main__":
                       }`}
                     >
                       回到编辑
-                    </button>
+                          </button>
                   </>
                 ) : (
                   <>
