@@ -82,4 +82,4 @@ CREATE INDEX idx_submissions_submitted_at ON submissions(submitted_at DESC);
 2. 中优先级：前端列表展示和详情查看
 3. 低优先级：高级功能（统计图表、导出等）
 
-请按照以上要求实现用户提交历史功能，确保代码质量和用户体验。
+请按照以上要求实现用户提交历史功能，确保代码质量和用户体验。··

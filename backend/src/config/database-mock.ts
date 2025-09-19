@@ -210,3 +210,163 @@ export const mockSubmissions = [
     updated_at: new Date(Date.now() - 4 * 60 * 60 * 1000)
   }
 ];
+
+export const mockTestCases = [
+  // Problem 1 - Design Database
+  {
+    id: '1-1',
+    problem_id: '1',
+    input: "db.insert('key1', 'value1')\ndb.retrieve('key1')",
+    expected_output: 'value1',
+    description: 'Basic insert and retrieve',
+    is_hidden: false,
+    is_quick_test: true,
+    created_at: new Date(),
+    updated_at: new Date()
+  },
+  {
+    id: '1-2',
+    problem_id: '1',
+    input: "db.insert('key2', 'value2')\ndb.remove('key2')\ndb.retrieve('key2')",
+    expected_output: 'null',
+    description: 'Insert, remove, then retrieve',
+    is_hidden: false,
+    is_quick_test: true,
+    created_at: new Date(),
+    updated_at: new Date()
+  },
+  {
+    id: '1-3',
+    problem_id: '1',
+    input: "db.retrieve('nonexistent')",
+    expected_output: 'null',
+    description: 'Retrieve non-existent key',
+    is_hidden: false,
+    is_quick_test: false,
+    created_at: new Date(),
+    updated_at: new Date()
+  },
+  {
+    id: '1-4',
+    problem_id: '1',
+    input: "db.insert('key3', 'value3')\ndb.insert('key3', 'new_value')\ndb.retrieve('key3')",
+    expected_output: 'new_value',
+    description: 'Update existing key',
+    is_hidden: true,
+    is_quick_test: false,
+    created_at: new Date(),
+    updated_at: new Date()
+  },
+  {
+    id: '1-5',
+    problem_id: '1',
+    input: "db.remove('nonexistent')",
+    expected_output: 'false',
+    description: 'Remove non-existent key',
+    is_hidden: true,
+    is_quick_test: false,
+    created_at: new Date(),
+    updated_at: new Date()
+  },
+  // Problem 2 - Array Compression
+  {
+    id: '2-1',
+    problem_id: '2',
+    input: 'compress([1, 1, 2, 2, 2])',
+    expected_output: '[(1, 2), (2, 3)]',
+    description: 'Basic compression',
+    is_hidden: false,
+    is_quick_test: true,
+    created_at: new Date(),
+    updated_at: new Date()
+  },
+  {
+    id: '2-2',
+    problem_id: '2',
+    input: 'compress([])',
+    expected_output: '[]',
+    description: 'Empty array',
+    is_hidden: false,
+    is_quick_test: true,
+    created_at: new Date(),
+    updated_at: new Date()
+  },
+  {
+    id: '2-3',
+    problem_id: '2',
+    input: 'decompress([(5, 3)])',
+    expected_output: '[5, 5, 5]',
+    description: 'Basic decompression',
+    is_hidden: false,
+    is_quick_test: false,
+    created_at: new Date(),
+    updated_at: new Date()
+  },
+  {
+    id: '2-4',
+    problem_id: '2',
+    input: 'compress([1, 2, 3, 4, 5])',
+    expected_output: '[(1, 1), (2, 1), (3, 1), (4, 1), (5, 1)]',
+    description: 'No duplicates',
+    is_hidden: true,
+    is_quick_test: false,
+    created_at: new Date(),
+    updated_at: new Date()
+  },
+  {
+    id: '2-5',
+    problem_id: '2',
+    input: 'compress([7, 7, 7, 7, 7])',
+    expected_output: '[(7, 5)]',
+    description: 'All same elements',
+    is_hidden: true,
+    is_quick_test: false,
+    created_at: new Date(),
+    updated_at: new Date()
+  }
+];
+
+export const mockExecutionRecords = [
+  {
+    id: 'exec-1',
+    user_id: '2',
+    problem_id: '1',
+    code: 'class Database:\n    def __init__(self):\n        self.data = {}\n    \n    def insert(self, key, value):\n        self.data[key] = value\n    \n    def remove(self, key):\n        if key in self.data:\n            del self.data[key]\n            return True\n        return False\n    \n    def retrieve(self, key):\n        return self.data.get(key, None)',
+    language: 'python',
+    passed: true,
+    passed_count: 2,
+    total_count: 2,
+    execution_time: 45,
+    memory_usage: 12,
+    is_quick_test: true,
+    created_at: new Date(Date.now() - 30 * 60 * 1000) // 30 minutes ago
+  },
+  {
+    id: 'exec-2',
+    user_id: '2',
+    problem_id: '1',
+    code: 'class Database:\n    def __init__(self):\n        self.data = {}\n    \n    def insert(self, key, value):\n        self.data[key] = value\n    \n    def remove(self, key):\n        if key in self.data:\n            del self.data[key]\n            return True\n        return False\n    \n    def retrieve(self, key):\n        return self.data.get(key, None)',
+    language: 'python',
+    passed: true,
+    passed_count: 5,
+    total_count: 5,
+    execution_time: 120,
+    memory_usage: 15,
+    is_quick_test: false,
+    created_at: new Date(Date.now() - 25 * 60 * 1000) // 25 minutes ago
+  },
+  {
+    id: 'exec-3',
+    user_id: '2',
+    problem_id: '2',
+    code: 'function compressArray(arr) {\n    if (arr.length === 0) return [];\n    \n    const result = [];\n    let current = arr[0];\n    let count = 1;\n    \n    for (let i = 1; i < arr.length; i++) {\n        if (arr[i] === current) {\n            count++;\n        } else {\n            result.push([current, count]);\n            current = arr[i];\n            count = 1;\n        }\n    }\n    \n    result.push([current, count]);\n    return result;\n}',
+    language: 'javascript',
+    passed: true,
+    passed_count: 2,
+    total_count: 2,
+    execution_time: 35,
+    memory_usage: 8,
+    is_quick_test: true,
+    created_at: new Date(Date.now() - 20 * 60 * 1000) // 20 minutes ago
+  }
+];
