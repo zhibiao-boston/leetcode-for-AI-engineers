@@ -8,7 +8,7 @@ interface Problem {
   company: string;
   categories: string[];
   tags: string[];
-  status: 'draft' | 'published';
+  status: 'draft' | 'published' | 'archived';
   created_at: string;
   updated_at: string;
 }
@@ -27,7 +27,7 @@ const EditProblemModal: React.FC<EditProblemModalProps> = ({ problem, onClose, o
     company: '',
     categories: [] as string[],
     tags: [] as string[],
-    status: 'draft' as 'draft' | 'published'
+    status: 'draft' as 'draft' | 'published' | 'archived'
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [categoryInput, setCategoryInput] = useState('');
@@ -268,6 +268,7 @@ const EditProblemModal: React.FC<EditProblemModalProps> = ({ problem, onClose, o
             >
               <option value="draft">Draft</option>
               <option value="published">Published</option>
+              <option value="archived">Archived</option>
             </select>
           </div>
 

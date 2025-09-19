@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import AuthModal from './AuthModal';
 import UserProfile from './UserProfile';
@@ -7,6 +7,21 @@ import UserProfile from './UserProfile';
 const Header: React.FC = () => {
   const { isAuthenticated, user } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+  const location = useLocation();
+
+  const handleSignInClick = () => {
+    setAuthMode('login');
+    setShowAuthModal(true);
+  };
+
+  const handleSignUpClick = () => {
+    setAuthMode('register');
+    setShowAuthModal(true);
+  };
+
+  const isAdminDashboard = location.pathname === '/admin';
+  const isHomePage = location.pathname === '/';
 
   return (
     <>
@@ -17,20 +32,34 @@ const Header: React.FC = () => {
             <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">ID</span>
             </div>
-            <span className="text-xl font-bold text-white">LLM Coding</span>
+            <Link 
+              to="/" 
+              className="text-2xl font-bold text-white hover:text-purple-300 transition-colors duration-200"
+            >
+              LLM Coding
+            </Link>
           </div>
 
           {/* Navigation */}
           <div className="flex items-center space-x-8">
-            <div className="relative">
-              <button className="text-gray-300 hover:text-white transition-colors duration-200">
-                Interview Resources
-              </button>
-            </div>
+            <Link
+              to="/"
+              className={`text-lg font-medium transition-colors duration-200 ${
+                isHomePage 
+                  ? 'text-purple-400' 
+                  : 'text-gray-300 hover:text-white'
+              }`}
+            >
+              Interview Resources
+            </Link>
             {user && user.role === 'admin' && (
               <Link
                 to="/admin"
-                className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+                className={`text-lg font-medium transition-colors duration-200 ${
+                  isAdminDashboard 
+                    ? 'text-purple-400' 
+                    : 'text-gray-300 hover:text-white'
+                }`}
               >
                 Admin Dashboard
               </Link>
@@ -44,14 +73,14 @@ const Header: React.FC = () => {
             ) : (
               <div className="flex items-center space-x-3">
                 <button
-                  onClick={() => setShowAuthModal(true)}
-                  className="text-gray-300 hover:text-white transition-colors duration-200 text-sm"
+                  onClick={handleSignInClick}
+                  className="text-gray-300 hover:text-white transition-colors duration-200 text-base font-medium"
                 >
                   Sign In
                 </button>
                 <button
-                  onClick={() => setShowAuthModal(true)}
-                  className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md transition-colors duration-200 text-sm font-medium"
+                  onClick={handleSignUpClick}
+                  className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md transition-colors duration-200 text-base font-medium"
                 >
                   Sign Up
                 </button>
@@ -64,6 +93,8 @@ const Header: React.FC = () => {
       <AuthModal
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
+        mode={authMode}
+        onModeChange={setAuthMode}
       />
     </>
   );

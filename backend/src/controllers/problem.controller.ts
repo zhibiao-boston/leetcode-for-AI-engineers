@@ -3,17 +3,21 @@ import { ProblemModel } from '../models/Problem';
 import { body, param, validationResult } from 'express-validator';
 
 export class ProblemController {
-  // Get all problems (admin can see draft and published)
+  // Get all problems (admin can see draft, published, and archived)
   static async getAllProblems(req: Request, res: Response): Promise<void> {
     try {
-      const { status, difficulty, company } = req.query;
+      const { status, difficulty, company, category, tag, limit, offset } = req.query;
       const filters: any = {};
       
       if (status) filters.status = status;
       if (difficulty) filters.difficulty = difficulty;
       if (company) filters.company = company;
+      if (category) filters.category = category;
+      if (tag) filters.tag = tag;
+      if (limit) filters.limit = parseInt(limit as string);
+      if (offset) filters.offset = parseInt(offset as string);
       
-      const problems = await ProblemModel.findAll(filters);
+      const problems = await ProblemModel.findAllWithSolutions(filters);
       res.json({
         message: 'Problems retrieved successfully',
         data: problems
@@ -27,7 +31,7 @@ export class ProblemController {
   static async getProblemById(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const problem = await ProblemModel.findById(id);
+      const problem = await ProblemModel.findByIdWithSolutions(id);
       
       if (!problem) {
         res.status(404).json({ error: 'Problem not found' });
@@ -54,7 +58,7 @@ export class ProblemController {
 
       const problemData = {
         ...req.body,
-        created_by: req.user?.id,
+        created_by: req.user?.userId,
         status: req.body.status || 'draft'
       };
 
@@ -117,14 +121,14 @@ export class ProblemController {
     }
   }
 
-  // Publish/Unpublish problem
-  static async toggleProblemStatus(req: Request, res: Response): Promise<void> {
+  // Update problem status
+  static async updateProblemStatus(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
       const { status } = req.body;
 
-      if (!['draft', 'published'].includes(status)) {
-        res.status(400).json({ error: 'Invalid status. Must be draft or published' });
+      if (!['draft', 'published', 'archived'].includes(status)) {
+        res.status(400).json({ error: 'Invalid status. Must be draft, published, or archived' });
         return;
       }
 
@@ -141,7 +145,7 @@ export class ProblemController {
       }
 
       res.json({
-        message: `Problem ${status} successfully`,
+        message: `Problem status updated to ${status} successfully`,
         data: problem
       });
     } catch (error) {

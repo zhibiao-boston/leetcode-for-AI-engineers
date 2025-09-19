@@ -40,14 +40,18 @@ router.delete('/problems/:id', [
 
 router.patch('/problems/:id/status', [
   param('id').isUUID().withMessage('Invalid problem ID'),
-  body('status').isIn(['draft', 'published']).withMessage('Invalid status')
-], ProblemController.toggleProblemStatus);
+  body('status').isIn(['draft', 'published', 'archived']).withMessage('Invalid status')
+], ProblemController.updateProblemStatus);
 
 // Admin Solution Management Routes
 router.get('/problems/:problemId/solutions', AdminSolutionController.getSolutionsByProblem);
 router.post('/problems/:problemId/solutions', [
   param('problemId').isUUID().withMessage('Invalid problem ID'),
+  body('title').notEmpty().withMessage('Title is required'),
+  body('description').optional().isString(),
   body('code').notEmpty().withMessage('Code is required'),
+  body('language').notEmpty().withMessage('Language is required'),
+  body('complexity').optional().isString(),
   body('explanation').optional().isString(),
   body('time_complexity').optional().isString(),
   body('space_complexity').optional().isString()
@@ -55,7 +59,11 @@ router.post('/problems/:problemId/solutions', [
 
 router.put('/solutions/:id', [
   param('id').isUUID().withMessage('Invalid solution ID'),
+  body('title').optional().notEmpty(),
+  body('description').optional().isString(),
   body('code').optional().notEmpty(),
+  body('language').optional().notEmpty(),
+  body('complexity').optional().isString(),
   body('explanation').optional().isString(),
   body('time_complexity').optional().isString(),
   body('space_complexity').optional().isString()

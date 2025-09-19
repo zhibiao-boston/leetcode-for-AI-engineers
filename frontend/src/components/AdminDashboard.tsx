@@ -1,7 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import CreateProblemModal from './CreateProblemModal';
 import EditProblemModal from './EditProblemModal';
+import ProblemsManagementTab from './ProblemsManagementTab';
+import SolutionsManagementTab from './SolutionsManagementTab';
+import AnalyticsTab from './AnalyticsTab';
 
 interface Problem {
   id: string;
@@ -11,41 +14,49 @@ interface Problem {
   company: string;
   categories: string[];
   tags: string[];
-  status: 'draft' | 'published';
+  status: 'draft' | 'published' | 'archived';
   created_at: string;
   updated_at: string;
+  solution_count?: number;
+  solutions?: AdminSolution[];
 }
 
 interface AdminSolution {
   id: string;
   problem_id: string;
+  title: string;
+  description?: string;
   code: string;
-  explanation: string;
-  time_complexity: string;
-  space_complexity: string;
+  language: string;
+  complexity?: string;
+  explanation?: string;
+  time_complexity?: string;
+  space_complexity?: string;
+  created_by?: string;
+  created_by_name?: string;
   created_at: string;
+  updated_at: string;
 }
 
 const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
   const [problems, setProblems] = useState<Problem[]>([]);
-  const [selectedProblem, setSelectedProblem] = useState<Problem | null>(null);
-  const [adminSolutions, setAdminSolutions] = useState<AdminSolution[]>([]);
+  const [solutions] = useState<AdminSolution[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'problems' | 'solutions'>('problems');
+  const [activeTab, setActiveTab] = useState<'problems' | 'solutions' | 'analytics'>('problems');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingProblem, setEditingProblem] = useState<Problem | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'published' | 'draft' | 'archived'>('all');
 
-  // Fetch problems on component mount
-  useEffect(() => {
-    fetchProblems();
-  }, []);
-
-  const fetchProblems = async () => {
+  const fetchProblems = useCallback(async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:5000/api/admin/problems', {
+      const queryParams = new URLSearchParams();
+      if (filterStatus !== 'all') queryParams.append('status', filterStatus);
+      
+      const response = await fetch(`http://localhost:5000/api/admin/problems?${queryParams}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -61,31 +72,17 @@ const AdminDashboard: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [filterStatus]);
 
-  const fetchAdminSolutions = async (problemId: string) => {
-    try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:5000/api/admin/problems/${problemId}/solutions`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+  // Fetch problems on component mount and when filter changes
+  useEffect(() => {
+    fetchProblems();
+  }, [fetchProblems]);
 
-      if (response.ok) {
-        const data = await response.json();
-        setAdminSolutions(data.data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch solutions:', error);
-    }
-  };
-
-  const handleProblemSelect = (problem: Problem) => {
-    setSelectedProblem(problem);
-    fetchAdminSolutions(problem.id);
-    setActiveTab('solutions');
+  // Enhanced problem management functions
+  const handleEditProblem = (problem: Problem) => {
+    setEditingProblem(problem);
+    setShowEditModal(true);
   };
 
   const handleDeleteProblem = async (problemId: string) => {
@@ -103,19 +100,13 @@ const AdminDashboard: React.FC = () => {
 
       if (response.ok) {
         setProblems(problems.filter(p => p.id !== problemId));
-        if (selectedProblem?.id === problemId) {
-          setSelectedProblem(null);
-          setAdminSolutions([]);
-        }
       }
     } catch (error) {
       console.error('Failed to delete problem:', error);
     }
   };
 
-  const handleToggleStatus = async (problemId: string, currentStatus: string) => {
-    const newStatus = currentStatus === 'published' ? 'draft' : 'published';
-    
+  const handleUpdateProblemStatus = async (problemId: string, status: string) => {
     try {
       const token = localStorage.getItem('accessToken');
       const response = await fetch(`http://localhost:5000/api/admin/problems/${problemId}/status`, {
@@ -124,16 +115,33 @@ const AdminDashboard: React.FC = () => {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ status: newStatus })
+        body: JSON.stringify({ status })
       });
 
       if (response.ok) {
         fetchProblems(); // Refresh the list
       }
     } catch (error) {
-      console.error('Failed to toggle status:', error);
+      console.error('Failed to update problem status:', error);
     }
   };
+
+  // Solution management functions
+  const handleEditSolution = (solution: AdminSolution) => {
+    // This will be handled by the SolutionsManagementTab component
+    console.log('Edit solution:', solution);
+  };
+
+  const handleSaveSolution = async (solution: AdminSolution) => {
+    // This will be handled by the SolutionsManagementTab component
+    console.log('Save solution:', solution);
+  };
+
+  const handleClearSolution = (solutionId: string) => {
+    // This will be handled by the SolutionsManagementTab component
+    console.log('Clear solution:', solutionId);
+  };
+
 
   if (!user || user.role !== 'admin') {
     return (
@@ -155,187 +163,65 @@ const AdminDashboard: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900">
-      {/* Header */}
-      <div className="bg-gray-800 border-b border-gray-700 px-6 py-4">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-white">Admin Dashboard</h1>
-          <div className="flex space-x-4">
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors duration-200"
-            >
-              Add New Problem
-            </button>
-            <button
-              onClick={() => setActiveTab('problems')}
-              className={`px-4 py-2 rounded-md transition-colors duration-200 ${
-                activeTab === 'problems'
-                  ? 'bg-purple-600 text-white'
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-              }`}
-            >
-              Problems ({problems.length})
-            </button>
-            {selectedProblem && (
-              <button
-                onClick={() => setActiveTab('solutions')}
-                className={`px-4 py-2 rounded-md transition-colors duration-200 ${
-                  activeTab === 'solutions'
-                    ? 'bg-purple-600 text-white'
-                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                }`}
-              >
-                Solutions ({adminSolutions.length})
-              </button>
-            )}
-          </div>
+    <div className="min-h-screen bg-gray-900 text-white">
+      {/* Enhanced header with tabs */}
+      <div className="bg-gray-800 border-b border-gray-700 p-6">
+        <h1 className="text-3xl font-bold mb-4">Admin Dashboard</h1>
+        <div className="flex space-x-4">
+          <button
+            onClick={() => setActiveTab('problems')}
+            className={`px-4 py-2 rounded-md ${
+              activeTab === 'problems' ? 'bg-purple-600' : 'bg-gray-700'
+            }`}
+          >
+            Problems Management
+          </button>
+          <button
+            onClick={() => setActiveTab('solutions')}
+            className={`px-4 py-2 rounded-md ${
+              activeTab === 'solutions' ? 'bg-purple-600' : 'bg-gray-700'
+            }`}
+          >
+            Solutions Management
+          </button>
+          <button
+            onClick={() => setActiveTab('analytics')}
+            className={`px-4 py-2 rounded-md ${
+              activeTab === 'analytics' ? 'bg-purple-600' : 'bg-gray-700'
+            }`}
+          >
+            Analytics
+          </button>
         </div>
       </div>
 
-      <div className="flex">
-        {/* Problems List */}
-        <div className="w-1/3 bg-gray-800 border-r border-gray-700 min-h-screen">
-          <div className="p-4">
-            <h2 className="text-lg font-semibold text-white mb-4">All Problems</h2>
-            <div className="space-y-2">
-              {problems.map((problem) => (
-                <div
-                  key={problem.id}
-                  className={`p-3 rounded-md cursor-pointer transition-colors duration-200 ${
-                    selectedProblem?.id === problem.id
-                      ? 'bg-purple-600 text-white'
-                      : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                  }`}
-                  onClick={() => handleProblemSelect(problem)}
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <h3 className="font-medium text-sm">{problem.title}</h3>
-                      <p className="text-xs opacity-75 mt-1">
-                        {problem.difficulty} • {problem.company}
-                      </p>
-                      <div className="flex items-center mt-2 space-x-2">
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs ${
-                            problem.status === 'published'
-                              ? 'bg-green-600 text-white'
-                              : 'bg-yellow-600 text-white'
-                          }`}
-                        >
-                          {problem.status}
-                        </span>
-                        <span className="text-xs opacity-75">
-                          {problem.categories.join(', ')}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex flex-col space-y-1 ml-2">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setEditingProblem(problem);
-                          setShowEditModal(true);
-                        }}
-                        className="text-blue-400 hover:text-blue-300 text-xs"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleToggleStatus(problem.id, problem.status);
-                        }}
-                        className="text-green-400 hover:text-green-300 text-xs"
-                      >
-                        {problem.status === 'published' ? 'Unpublish' : 'Publish'}
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteProblem(problem.id);
-                        }}
-                        className="text-red-400 hover:text-red-300 text-xs"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+      {/* Tab content */}
+      {activeTab === 'problems' && (
+        <ProblemsManagementTab
+          problems={problems}
+          onEditProblem={handleEditProblem}
+          onDeleteProblem={handleDeleteProblem}
+          onUpdateStatus={handleUpdateProblemStatus}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          filterStatus={filterStatus}
+          setFilterStatus={setFilterStatus}
+          onCreateProblem={() => setShowCreateModal(true)}
+        />
+      )}
 
-        {/* Main Content */}
-        <div className="flex-1 p-6">
-          {activeTab === 'problems' && (
-            <div>
-              <h2 className="text-xl font-semibold text-white mb-4">Problem Management</h2>
-              <p className="text-gray-400">
-                Select a problem from the left to view details and manage solutions.
-              </p>
-            </div>
-          )}
+      {activeTab === 'solutions' && (
+        <SolutionsManagementTab
+          solutions={solutions}
+          onEditSolution={handleEditSolution}
+          onSaveSolution={handleSaveSolution}
+          onClearSolution={handleClearSolution}
+        />
+      )}
 
-          {activeTab === 'solutions' && selectedProblem && (
-            <div>
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold text-white">
-                  Solutions for: {selectedProblem.title}
-                </h2>
-                <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition-colors duration-200">
-                  Add Solution
-                </button>
-              </div>
-              
-              <div className="space-y-4">
-                {adminSolutions.map((solution) => (
-                  <div key={solution.id} className="bg-gray-800 rounded-lg p-4">
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="text-white font-medium">Solution #{solution.id.slice(-8)}</h3>
-                      <div className="flex space-x-2">
-                        <button className="text-blue-400 hover:text-blue-300 text-sm">Edit</button>
-                        <button className="text-red-400 hover:text-red-300 text-sm">Delete</button>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4 mb-3">
-                      <div>
-                        <span className="text-gray-400 text-sm">Time Complexity:</span>
-                        <span className="text-white ml-2">{solution.time_complexity || 'N/A'}</span>
-                      </div>
-                      <div>
-                        <span className="text-gray-400 text-sm">Space Complexity:</span>
-                        <span className="text-white ml-2">{solution.space_complexity || 'N/A'}</span>
-                      </div>
-                    </div>
-                    {solution.explanation && (
-                      <div className="mb-3">
-                        <span className="text-gray-400 text-sm">Explanation:</span>
-                        <p className="text-white text-sm mt-1">{solution.explanation}</p>
-                      </div>
-                    )}
-                    <div className="bg-gray-900 rounded p-3">
-                      <pre className="text-green-400 text-sm overflow-x-auto">
-                        {solution.code}
-                      </pre>
-                    </div>
-                  </div>
-                ))}
-                
-                {adminSolutions.length === 0 && (
-                  <div className="text-center py-8">
-                    <p className="text-gray-400">No solutions added yet.</p>
-                    <button className="mt-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition-colors duration-200">
-                      Add First Solution
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+      {activeTab === 'analytics' && (
+        <AnalyticsTab problems={problems} solutions={solutions} />
+      )}
 
       {/* Create Problem Modal */}
       {showCreateModal && (

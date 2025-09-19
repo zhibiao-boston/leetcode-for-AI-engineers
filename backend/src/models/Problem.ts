@@ -1,4 +1,5 @@
 import { pool } from '../config/database';
+import { AdminSolution } from './AdminSolution';
 
 export interface Problem {
   id: string;
@@ -9,11 +10,12 @@ export interface Problem {
   company?: string;
   categories: string[];
   tags: string[];
-  status: 'draft' | 'published';
+  status: 'draft' | 'published' | 'archived';
   created_by: string;
   created_at: Date;
   updated_at: Date;
   published_at?: Date;
+  solutions?: AdminSolution[];
 }
 
 export interface CreateProblemData {
@@ -34,7 +36,7 @@ export interface UpdateProblemData {
   company?: string;
   categories?: string[];
   tags?: string[];
-  status?: 'draft' | 'published';
+  status?: 'draft' | 'published' | 'archived';
 }
 
 export class ProblemModel {
@@ -69,7 +71,7 @@ export class ProblemModel {
 
   // Get all problems with filters
   static async findAll(filters: {
-    status?: 'draft' | 'published';
+    status?: 'draft' | 'published' | 'archived';
     difficulty?: 'easy' | 'medium' | 'hard';
     company?: string;
     category?: string;
@@ -163,13 +165,14 @@ export class ProblemModel {
   }
 
   // Delete problem (soft delete)
-  static async delete(id: string): Promise<void> {
+  static async delete(id: string): Promise<boolean> {
     const query = 'UPDATE problems SET updated_at = NOW() WHERE id = $1';
-    await pool.query(query, [id]);
+    const result = await pool.query(query, [id]);
+    return (result.rowCount || 0) > 0;
   }
 
   // Count problems by status
-  static async countByStatus(status?: 'draft' | 'published'): Promise<number> {
+  static async countByStatus(status?: 'draft' | 'published' | 'archived'): Promise<number> {
     let query = 'SELECT COUNT(*) FROM problems';
     const values: any[] = [];
 
@@ -207,6 +210,89 @@ export class ProblemModel {
     
     const searchPattern = `%${searchTerm}%`;
     const result = await pool.query(query, [searchPattern, limit, offset]);
+    return result.rows;
+  }
+
+  // Get problem with solutions
+  static async findByIdWithSolutions(id: string): Promise<Problem | null> {
+    const problemQuery = 'SELECT * FROM problems WHERE id = $1';
+    const problemResult = await pool.query(problemQuery, [id]);
+    
+    if (!problemResult.rows[0]) {
+      return null;
+    }
+
+    const solutionsQuery = `
+      SELECT as.*, u.name as created_by_name
+      FROM admin_solutions as
+      LEFT JOIN users u ON as.created_by = u.id
+      WHERE as.problem_id = $1
+      ORDER BY as.created_at DESC
+    `;
+    const solutionsResult = await pool.query(solutionsQuery, [id]);
+
+    return {
+      ...problemResult.rows[0],
+      solutions: solutionsResult.rows
+    };
+  }
+
+  // Get all problems with solutions for admin
+  static async findAllWithSolutions(filters: {
+    status?: 'draft' | 'published' | 'archived';
+    difficulty?: 'easy' | 'medium' | 'hard';
+    company?: string;
+    category?: string;
+    tag?: string;
+    limit?: number;
+    offset?: number;
+  } = {}): Promise<Problem[]> {
+    const { status, difficulty, company, category, tag, limit = 50, offset = 0 } = filters;
+    
+    let query = `
+      SELECT p.*, 
+             COUNT(as.id) as solution_count
+      FROM problems p
+      LEFT JOIN admin_solutions as ON p.id = as.problem_id
+      WHERE 1=1
+    `;
+    const values: any[] = [];
+    let paramCount = 0;
+
+    if (status) {
+      paramCount++;
+      query += ` AND p.status = $${paramCount}`;
+      values.push(status);
+    }
+
+    if (difficulty) {
+      paramCount++;
+      query += ` AND p.difficulty = $${paramCount}`;
+      values.push(difficulty);
+    }
+
+    if (company) {
+      paramCount++;
+      query += ` AND p.company = $${paramCount}`;
+      values.push(company);
+    }
+
+    if (category) {
+      paramCount++;
+      query += ` AND $${paramCount} = ANY(p.categories)`;
+      values.push(category);
+    }
+
+    if (tag) {
+      paramCount++;
+      query += ` AND $${paramCount} = ANY(p.tags)`;
+      values.push(tag);
+    }
+
+    query += ` GROUP BY p.id ORDER BY p.created_at DESC LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}`;
+    values.push(limit, offset);
+
+    const result = await pool.query(query, values);
     return result.rows;
   }
 }

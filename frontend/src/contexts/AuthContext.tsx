@@ -43,7 +43,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     if (token) {
       // In a real app, you'd validate the token with the backend
       // For now, we'll just check if it exists
-      const userData = localStorage.getItem('userData');
+      const userData = localStorage.getItem('user');
       if (userData) {
         setUser(JSON.parse(userData));
       }
@@ -72,7 +72,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Store tokens and user data
       localStorage.setItem('accessToken', accessToken);
       localStorage.setItem('refreshToken', refreshToken);
-      localStorage.setItem('userData', JSON.stringify(userData));
+      localStorage.setItem('user', JSON.stringify(userData));
 
       setUser(userData);
     } catch (error) {
@@ -102,7 +102,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Store tokens and user data
       localStorage.setItem('accessToken', accessToken);
       localStorage.setItem('refreshToken', refreshToken);
-      localStorage.setItem('userData', JSON.stringify(userData));
+      localStorage.setItem('user', JSON.stringify(userData));
 
       setUser(userData);
     } catch (error) {
@@ -114,7 +114,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = () => {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
-    localStorage.removeItem('userData');
+    localStorage.removeItem('user');
     setUser(null);
   };
 

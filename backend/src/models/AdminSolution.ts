@@ -1,18 +1,27 @@
 export interface AdminSolution {
   id: string;
   problem_id: string;
+  title: string;
+  description?: string;
   code: string;
+  language: string;
+  complexity?: string;
   explanation?: string;
   time_complexity?: string;
   space_complexity?: string;
   created_by?: string;
+  created_by_name?: string;
   created_at: Date;
   updated_at: Date;
 }
 
 export interface CreateAdminSolutionData {
   problem_id: string;
+  title: string;
+  description?: string;
   code: string;
+  language: string;
+  complexity?: string;
   explanation?: string;
   time_complexity?: string;
   space_complexity?: string;
@@ -20,7 +29,11 @@ export interface CreateAdminSolutionData {
 }
 
 export interface UpdateAdminSolutionData {
+  title?: string;
+  description?: string;
   code?: string;
+  language?: string;
+  complexity?: string;
   explanation?: string;
   time_complexity?: string;
   space_complexity?: string;
@@ -32,6 +45,8 @@ export class AdminSolutionModel {
     {
       id: '1',
       problem_id: '1',
+      title: 'Basic Implementation',
+      description: 'A simple dictionary-based implementation',
       code: `class Database:
     def __init__(self):
         self.data = {}
@@ -47,10 +62,13 @@ export class AdminSolutionModel {
     
     def retrieve(self, key):
         return self.data.get(key, None)`,
+      language: 'python',
+      complexity: 'O(1)',
       explanation: 'This solution uses a simple dictionary to store key-value pairs. Insert and retrieve operations are O(1), while remove is O(1) on average.',
       time_complexity: 'O(1)',
       space_complexity: 'O(n)',
       created_by: '1',
+      created_by_name: 'Admin User',
       created_at: new Date(),
       updated_at: new Date()
     }
@@ -72,6 +90,7 @@ export class AdminSolutionModel {
     const newSolution: AdminSolution = {
       id: (this.solutions.length + 1).toString(),
       ...data,
+      created_by_name: 'Admin User', // This would come from user lookup in real implementation
       created_at: new Date(),
       updated_at: new Date()
     };

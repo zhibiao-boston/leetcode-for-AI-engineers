@@ -29,7 +29,8 @@ export class AdminSolutionController {
 
       const solutionData = {
         ...req.body,
-        created_by: req.user?.id
+        problem_id: req.params.problemId,
+        created_by: req.user?.userId
       };
 
       const solution = await AdminSolutionModel.create(solutionData);
