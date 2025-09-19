@@ -69,7 +69,15 @@ const Header: React.FC = () => {
           {/* Right side - Authentication */}
           <div className="flex items-center space-x-4">
             {isAuthenticated ? (
-              <UserProfile />
+              <>
+                <Link
+                  to="/profile"
+                  className="text-gray-300 hover:text-white transition-colors duration-200 text-sm"
+                >
+                  My Profile
+                </Link>
+                <UserProfile />
+              </>
             ) : (
               <div className="flex items-center space-x-3">
                 <button

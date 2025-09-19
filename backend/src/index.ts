@@ -10,6 +10,7 @@ import { errorHandler, notFound, corsOptions } from './middleware/auth.middlewar
 // Import routes
 import authRoutes from './routes/auth.routes';
 import adminRoutes from './routes/admin.routes';
+import submissionRoutes from './routes/submission.routes';
 
 const app = express();
 
@@ -55,6 +56,7 @@ app.get('/health', (req, res) => {
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/submissions', submissionRoutes);
 
 // 404 handler
 app.use(notFound);

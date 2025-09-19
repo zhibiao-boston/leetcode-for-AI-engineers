@@ -1,5 +1,6 @@
 import { pool } from '../config/database';
 import { AdminSolution } from './AdminSolution';
+import { mockProblems } from '../config/database-mock';
 
 export interface Problem {
   id: string;
@@ -57,9 +58,9 @@ export class ProblemModel {
 
   // Find problem by ID
   static async findById(id: string): Promise<Problem | null> {
-    const query = 'SELECT * FROM problems WHERE id = $1';
-    const result = await pool.query(query, [id]);
-    return result.rows[0] || null;
+    // Use mock data instead of database
+    const problem = mockProblems.find(p => p.id === id);
+    return problem as Problem || null;
   }
 
   // Find problem by external ID

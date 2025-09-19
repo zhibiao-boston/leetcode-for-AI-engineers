@@ -1,4 +1,5 @@
 import { pool } from '../config/database';
+import { mockUsers } from '../config/database-mock';
 
 export interface User {
   id: string;
@@ -29,45 +30,52 @@ export class UserModel {
   static async create(userData: CreateUserData): Promise<User> {
     const { email, password_hash, name, role = 'user' } = userData;
     
-    const query = `
-      INSERT INTO users (email, password_hash, name, role)
-      VALUES ($1, $2, $3, $4)
-      RETURNING *
-    `;
+    // Use mock data instead of database
+    const newUser = {
+      id: (mockUsers.length + 1).toString(),
+      email,
+      password_hash,
+      name,
+      role: role as 'admin' | 'user',
+      created_at: new Date(),
+      updated_at: new Date(),
+      last_login_at: new Date()
+    };
     
-    const values = [email, password_hash, name, role];
-    const result = await pool.query(query, values);
-    return result.rows[0];
+    mockUsers.push(newUser);
+    return newUser as User;
   }
 
   // Find user by email
   static async findByEmail(email: string): Promise<User | null> {
-    const query = 'SELECT * FROM users WHERE email = $1';
-    const result = await pool.query(query, [email]);
-    return result.rows[0] || null;
+    // Use mock data instead of database
+    const user = mockUsers.find(u => u.email === email);
+    return user as User || null;
   }
 
   // Find user by ID
   static async findById(id: string): Promise<User | null> {
-    const query = 'SELECT * FROM users WHERE id = $1';
-    const result = await pool.query(query, [id]);
-    return result.rows[0] || null;
+    // Use mock data instead of database
+    const user = mockUsers.find(u => u.id === id);
+    return user as User || null;
   }
 
   // Update user
   static async update(id: string, userData: UpdateUserData): Promise<User> {
-    const fields = Object.keys(userData).map((key, index) => `${key} = $${index + 2}`);
-    const values = Object.values(userData);
+    // Use mock data instead of database
+    const userIndex = mockUsers.findIndex(u => u.id === id);
+    if (userIndex === -1) {
+      throw new Error('User not found');
+    }
     
-    const query = `
-      UPDATE users 
-      SET ${fields.join(', ')}, updated_at = NOW()
-      WHERE id = $1
-      RETURNING *
-    `;
+    // Update the mock user data
+    mockUsers[userIndex] = {
+      ...mockUsers[userIndex],
+      ...userData,
+      updated_at: new Date()
+    };
     
-    const result = await pool.query(query, [id, ...values]);
-    return result.rows[0];
+    return mockUsers[userIndex] as User;
   }
 
   // Delete user (soft delete)

@@ -12,6 +12,7 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  token: string | null;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name: string) => Promise<void>;
   logout: () => void;
@@ -36,11 +37,13 @@ const API_BASE_URL = 'http://localhost:5000/api';
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [token, setToken] = useState<string | null>(null);
 
   // Check for existing token on mount
   useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    if (token) {
+    const storedToken = localStorage.getItem('accessToken');
+    if (storedToken) {
+      setToken(storedToken);
       // In a real app, you'd validate the token with the backend
       // For now, we'll just check if it exists
       const userData = localStorage.getItem('user');
@@ -74,6 +77,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.setItem('refreshToken', refreshToken);
       localStorage.setItem('user', JSON.stringify(userData));
 
+      setToken(accessToken);
       setUser(userData);
     } catch (error) {
       console.error('Login error:', error);
@@ -104,6 +108,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.setItem('refreshToken', refreshToken);
       localStorage.setItem('user', JSON.stringify(userData));
 
+      setToken(accessToken);
       setUser(userData);
     } catch (error) {
       console.error('Registration error:', error);
@@ -115,6 +120,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
+    localStorage.removeItem('userData');
+    setToken(null);
     setUser(null);
   };
 
@@ -122,6 +129,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     user,
     isAuthenticated: !!user,
     isLoading,
+    token,
     login,
     register,
     logout,

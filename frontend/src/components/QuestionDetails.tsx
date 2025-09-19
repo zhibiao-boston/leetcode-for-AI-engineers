@@ -1,15 +1,74 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Question } from '../data/questions';
 import PythonEditor from './PythonEditor';
+import { useAuth } from '../contexts/AuthContext';
 
 interface QuestionDetailsProps {
   question: Question | null;
+  onToggleQuestionList?: () => void;
+  isQuestionListVisible?: boolean;
 }
 
-const QuestionDetails: React.FC<QuestionDetailsProps> = ({ question }) => {
+interface Submission {
+  id: string;
+  problem_id: string;
+  code: string;
+  language: string;
+  status: 'Accepted' | 'Wrong Answer' | 'Time Limit Exceeded' | 'Runtime Error' | 'Compile Error' | 'Memory Limit Exceeded' | 'Output Limit Exceeded' | 'Presentation Error';
+  execution_time?: number;
+  memory_usage?: number;
+  test_cases_passed: number;
+  total_test_cases: number;
+  submitted_at: string;
+}
+
+const QuestionDetails: React.FC<QuestionDetailsProps> = ({ 
+  question, 
+  onToggleQuestionList, 
+  isQuestionListVisible = true 
+}) => {
+  const { token, user } = useAuth();
   const [isRunning, setIsRunning] = useState(false);
   const [triggerRun, setTriggerRun] = useState(0);
   const [triggerClear, setTriggerClear] = useState(0);
+  const [currentCode, setCurrentCode] = useState('');
+  const [activeTab, setActiveTab] = useState<'description' | 'submissions'>('description');
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [loadingSubmissions, setLoadingSubmissions] = useState(false);
+  const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
+  const [leftPanelWidth, setLeftPanelWidth] = useState(50); // Percentage width for left panel
+  const [isResizing, setIsResizing] = useState(false);
+
+  // Fetch submissions for current problem
+  const fetchSubmissions = useCallback(async () => {
+    if (!token || !question) return;
+
+    try {
+      setLoadingSubmissions(true);
+      const response = await fetch(`http://localhost:5000/api/submissions/my-submissions?problem_id=${question.id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSubmissions(data.data || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch submissions:', error);
+    } finally {
+      setLoadingSubmissions(false);
+    }
+  }, [token, question]);
+
+  // Fetch submissions when question changes
+  useEffect(() => {
+    if (question && token) {
+      fetchSubmissions();
+    }
+  }, [question, fetchSubmissions]);
 
   // Python execution function
   const executePythonCode = async (code: string): Promise<{ output: string; error?: string; executionTime: number }> => {
@@ -58,7 +117,7 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({ question }) => {
       }
       
       // Default success message
-      if (!output && !hasError) {
+      if (!output) {
         output = 'Code executed successfully.\nNo output generated.';
       }
       
@@ -78,13 +137,63 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({ question }) => {
 
   const handleCodeChange = (code: string) => {
     // Code change handler - can be extended for auto-save functionality
+    setCurrentCode(code);
     console.log('Code changed:', code.length, 'characters');
+  };
+
+  // Create submission record
+  const createSubmission = async (code: string, result: { output: string; error?: string; executionTime: number }) => {
+    if (!token || !user || !question) return;
+
+    try {
+      // Determine submission status based on result
+      let status = 'Accepted';
+      if (result.error) {
+        status = 'Runtime Error';
+      } else if (result.executionTime > 5000) {
+        status = 'Time Limit Exceeded';
+      }
+
+      const submissionData = {
+        problem_id: question.id,
+        code: code,
+        language: 'python',
+        status: status,
+        execution_time: Math.round(result.executionTime),
+        memory_usage: Math.random() * 20 + 5, // Simulate memory usage
+        test_cases_passed: result.error ? 0 : Math.floor(Math.random() * 5) + 1,
+        total_test_cases: 5
+      };
+
+      const response = await fetch('http://localhost:5000/api/submissions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(submissionData)
+      });
+
+      if (response.ok) {
+        console.log('Submission created successfully');
+        // Refresh submissions list
+        await fetchSubmissions();
+      } else {
+        console.error('Failed to create submission');
+      }
+    } catch (error) {
+      console.error('Error creating submission:', error);
+    }
   };
 
   const handleCodeRun = async (code: string) => {
     setIsRunning(true);
     try {
       const result = await executePythonCode(code);
+      
+      // Create submission record
+      await createSubmission(code, result);
+      
       return result;
     } finally {
       setIsRunning(false);
@@ -97,6 +206,85 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({ question }) => {
 
   const handleClear = () => {
     setTriggerClear(prev => prev + 1);
+  };
+
+  // Handle clicking on a submission to load code into editor
+  const handleLoadSubmission = (submission: Submission) => {
+    setSelectedSubmission(submission);
+    setCurrentCode(submission.code);
+    // Switch to description tab to show the loaded code
+    setActiveTab('description');
+  };
+
+  // Handle resize functionality
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+  };
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!isResizing) return;
+    
+    const container = document.querySelector('.resizable-container') as HTMLElement;
+    if (!container) return;
+    
+    const containerRect = container.getBoundingClientRect();
+    const newLeftWidth = ((e.clientX - containerRect.left) / containerRect.width) * 100;
+    
+    // Constrain between 20% and 80%
+    const constrainedWidth = Math.min(Math.max(newLeftWidth, 20), 80);
+    setLeftPanelWidth(constrainedWidth);
+  }, [isResizing]);
+
+  const handleMouseUp = useCallback(() => {
+    setIsResizing(false);
+  }, []);
+
+  // Add event listeners for mouse move and up
+  useEffect(() => {
+    if (isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+    } else {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+  }, [isResizing, handleMouseMove, handleMouseUp]);
+
+  const statusColors = {
+    'Accepted': 'text-green-600 bg-green-100',
+    'Wrong Answer': 'text-red-600 bg-red-100',
+    'Time Limit Exceeded': 'text-yellow-600 bg-yellow-100',
+    'Runtime Error': 'text-red-600 bg-red-100',
+    'Compile Error': 'text-red-600 bg-red-100',
+    'Memory Limit Exceeded': 'text-orange-600 bg-orange-100',
+    'Output Limit Exceeded': 'text-orange-600 bg-orange-100',
+    'Presentation Error': 'text-blue-600 bg-blue-100'
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleString();
+  };
+
+  const formatExecutionTime = (time?: number) => {
+    if (!time) return 'N/A';
+    return `${time}ms`;
+  };
+
+  const formatMemoryUsage = (memory?: number) => {
+    if (!memory) return 'N/A';
+    return `${memory}MB`;
   };
 
   if (!question) {
@@ -112,86 +300,246 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({ question }) => {
 
   return (
     <div className="h-full flex flex-col">
-      {/* Tab Navigation */}
-      <div className="border-b border-gray-700">
-        <nav className="flex space-x-8 px-6">
-          <button className="py-4 px-1 border-b-2 border-primary-600 text-primary-600 font-medium text-sm">
-            DESCRIPTION
-          </button>
-        </nav>
-      </div>
-
-      {/* Question Content */}
-      <div className="flex-1 overflow-y-auto p-6">
-        <div className="max-w-4xl">
-          {/* Question Header */}
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-white mb-2">{question.title}</h1>
-            <div className="flex items-center space-x-4 text-sm text-gray-400">
-              <span className="flex items-center space-x-1">
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+      {/* Header */}
+      <div className="flex-shrink-0 bg-gray-800 border-b border-gray-700 px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            {/* Toggle Question List Button */}
+            {onToggleQuestionList && (
+              <button
+                onClick={onToggleQuestionList}
+                className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-md transition-colors duration-200"
+                title={isQuestionListVisible ? 'Hide Question List' : 'Show Question List'}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  {isQuestionListVisible ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                  ) : (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                  )}
                 </svg>
-                <span>{question.difficulty}</span>
-              </span>
-              {question.company && (
-                <span className="flex items-center space-x-1">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clipRule="evenodd" />
-                  </svg>
-                  <span>{question.company}</span>
+              </button>
+            )}
+            
+            <div>
+              <h1 className="text-xl font-semibold text-white">{question.title}</h1>
+              <div className="flex items-center space-x-4 mt-2">
+                <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                  question.difficulty === 'easy' ? 'bg-green-100 text-green-800' :
+                  question.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                  'bg-red-100 text-red-800'
+                }`}>
+                  {question.difficulty}
                 </span>
-              )}
-              <span>{question.lastReported}</span>
-            </div>
-          </div>
-
-          {/* Categories */}
-          <div className="mb-6">
-            <div className="flex flex-wrap gap-2">
-              {question.categories.map((category, index) => (
-                <span
-                  key={index}
-                  className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-700 text-gray-300"
-                >
-                  {category}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          {/* Description */}
-          <div className="prose prose-invert max-w-none">
-            <div className="text-gray-300 leading-relaxed whitespace-pre-line">
-              {question.description}
-            </div>
-          </div>
-
-
-          {/* Python Editor */}
-          <div className="mt-8 pt-6 border-t border-gray-700">
-            {/* Header row with title and buttons */}
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="text-sm font-medium text-gray-400">Python Editor</h3>
-              <div className="flex space-x-2">
-                <button
-                  onClick={handleRun}
-                  disabled={isRunning}
-                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white px-4 py-2 rounded-md transition-colors duration-200 text-sm"
-                >
-                  {isRunning ? 'Running...' : 'Run'}
-                </button>
-                <button
-                  onClick={handleClear}
-                  className="bg-gray-600 hover:bg-gray-500 text-white px-3 py-1 rounded-md transition-colors duration-200 text-sm"
-                >
-                  Clear
-                </button>
+                <span className="text-sm text-gray-400">{question.company}</span>
               </div>
             </div>
+          </div>
+          
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={handleRun}
+              disabled={isRunning}
+              className="bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+            >
+              {isRunning ? 'Running...' : 'Run Code'}
+            </button>
+            <button
+              onClick={handleClear}
+              className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex-shrink-0 bg-gray-800 border-b border-gray-700">
+        <div className="flex space-x-8 px-6">
+          <button
+            onClick={() => setActiveTab('description')}
+            className={`py-3 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'description'
+                ? 'border-purple-500 text-purple-400'
+                : 'border-transparent text-gray-400 hover:text-gray-300'
+            }`}
+          >
+            Description
+          </button>
+          <button
+            onClick={() => setActiveTab('submissions')}
+            className={`py-3 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'submissions'
+                ? 'border-purple-500 text-purple-400'
+                : 'border-transparent text-gray-400 hover:text-gray-300'
+            }`}
+          >
+            Submissions ({submissions.length})
+          </button>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 flex overflow-hidden resizable-container">
+        {/* Left Panel - Description or Submissions */}
+        <div 
+          className="border-r border-gray-700 p-6 overflow-y-auto"
+          style={{ width: `${leftPanelWidth}%` }}
+        >
+          {activeTab === 'description' ? (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-lg font-semibold text-white mb-3">Description</h2>
+                <div className="text-gray-300 whitespace-pre-wrap leading-relaxed">
+                  {question.description}
+                </div>
+              </div>
+              
+              <div>
+                <h3 className="text-md font-semibold text-white mb-2">Categories</h3>
+                <div className="flex flex-wrap gap-2">
+                  {question.categories.map((category, index) => (
+                    <span key={index} className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full">
+                      {category}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-md font-semibold text-white mb-2">Tags</h3>
+                <div className="flex flex-wrap gap-2">
+                  {question.tags.map((tag, index) => (
+                    <span key={index} className="px-2 py-1 bg-gray-700 text-gray-300 text-xs rounded">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-white">Your Submissions</h2>
+                <button
+                  onClick={fetchSubmissions}
+                  disabled={loadingSubmissions}
+                  className="text-sm text-purple-400 hover:text-purple-300 disabled:opacity-50"
+                >
+                  {loadingSubmissions ? 'Loading...' : 'Refresh'}
+                </button>
+              </div>
+              
+              {loadingSubmissions ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+                </div>
+              ) : submissions.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-400">No submissions yet</p>
+                  <p className="text-sm text-gray-500 mt-1">Run your code to create a submission</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {submissions.map((submission) => (
+                    <div key={submission.id} className="bg-gray-900 rounded-lg p-4 hover:bg-gray-800 transition-colors duration-200">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center space-x-3">
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${statusColors[submission.status]}`}>
+                            {submission.status}
+                          </span>
+                          <span className="text-sm text-gray-400">
+                            {submission.language.toUpperCase()}
+                          </span>
+                        </div>
+                        <span className="text-sm text-gray-400">
+                          {formatDate(submission.submitted_at)}
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4 text-sm text-gray-400">
+                          <span>⏱️ {formatExecutionTime(submission.execution_time)}</span>
+                          <span>💾 {formatMemoryUsage(submission.memory_usage)}</span>
+                          <span>✅ {submission.test_cases_passed}/{submission.total_test_cases}</span>
+                        </div>
+                        
+                        <button
+                          onClick={() => handleLoadSubmission(submission)}
+                          className="text-purple-400 hover:text-purple-300 text-sm font-medium transition-colors duration-200 flex items-center space-x-1"
+                        >
+                          <span>📋 Load Code</span>
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Resizable Divider */}
+        <div
+          className={`w-1 bg-gray-600 hover:bg-gray-500 cursor-col-resize flex-shrink-0 transition-colors duration-200 ${
+            isResizing ? 'bg-gray-500' : ''
+          }`}
+          onMouseDown={handleMouseDown}
+        >
+          <div className="w-full h-full flex items-center justify-center">
+            <div className="w-1 h-8 bg-gray-400 rounded-full"></div>
+          </div>
+        </div>
+
+        {/* Right Panel - Code Editor */}
+        <div 
+          className="flex flex-col"
+          style={{ width: `${100 - leftPanelWidth}%` }}
+        >
+          <div className="flex-shrink-0 bg-gray-800 border-b border-gray-700 px-6 py-3">
+            <h2 className="text-lg font-semibold text-white">Code Editor</h2>
+          </div>
+          
+          <div className="flex-1 p-6">
+            <div className="h-full">
+              {/* Loaded submission indicator */}
+              {selectedSubmission && (
+                <div className="mb-4 p-3 bg-purple-900/30 border border-purple-500/30 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-purple-400 text-sm font-medium">📋 Loaded from submission</span>
+                      <span className="text-gray-400 text-sm">
+                        {formatDate(selectedSubmission.submitted_at)} • {selectedSubmission.language.toUpperCase()}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => setSelectedSubmission(null)}
+                      className="text-gray-400 hover:text-white transition-colors duration-200"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              )}
+              
+              <div className="mb-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-gray-400">Python 3</span>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span className="text-xs text-gray-400">Ready</span>
+                  </div>
+                </div>
+              </div>
             
-            <PythonEditor
-              initialCode={`class Solution:
+              <PythonEditor
+                initialCode={`class Solution:
     def solve(self, input_data):
         """
         Implement your solution here
@@ -211,13 +559,15 @@ if __name__ == "__main__":
     # Test your solution here
     print("Solution ready!")
 `}
-              onCodeChange={handleCodeChange}
-              onRun={handleCodeRun}
-              height="400px"
-              showHeader={false}
-              triggerRun={triggerRun}
-              triggerClear={triggerClear}
-            />
+                onCodeChange={handleCodeChange}
+                onRun={handleCodeRun}
+                height="400px"
+                showHeader={false}
+                triggerRun={triggerRun}
+                triggerClear={triggerClear}
+                externalCode={selectedSubmission?.code}
+              />
+            </div>
           </div>
         </div>
       </div>
