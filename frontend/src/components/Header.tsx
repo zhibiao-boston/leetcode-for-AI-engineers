@@ -57,7 +57,7 @@ const Header: React.FC = () => {
                   : 'text-gray-900 hover:text-purple-600'
               }`}
             >
-              Coding LLM from Scratch
+              Code LLM from Scratch
             </button>
           </div>
 

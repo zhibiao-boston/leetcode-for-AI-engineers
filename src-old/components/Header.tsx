@@ -9,7 +9,7 @@ const Header: React.FC = () => {
           <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
             <span className="text-white font-bold text-sm">ID</span>
           </div>
-          <span className="text-xl font-bold text-white">LLM Coding</span>
+          <span className="text-xl font-bold text-white">Code LLM from Scratch</span>
         </div>
 
         {/* Navigation */}
