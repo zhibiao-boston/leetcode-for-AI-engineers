@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface Problem {
   id: string;
@@ -24,6 +25,7 @@ interface AnalyticsTabProps {
 }
 
 const AnalyticsTab: React.FC<AnalyticsTabProps> = ({ problems, solutions }) => {
+  const { theme } = useTheme();
   // Calculate statistics
   const totalProblems = problems.length;
   const publishedProblems = problems.filter(p => p.status === 'published').length;
@@ -91,42 +93,70 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({ problems, solutions }) => {
 
   return (
     <div className="p-6">
-      <h2 className="text-2xl font-bold mb-6">Analytics Dashboard</h2>
+      <h2 className={`text-2xl font-bold mb-6 transition-colors duration-200 ${
+        theme === 'dark' ? 'text-white' : 'text-gray-900'
+      }`}>Analytics Dashboard</h2>
 
       {/* Overview Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-gray-800 rounded-lg p-6">
-          <div className="text-3xl font-bold text-white mb-2">{totalProblems}</div>
-          <div className="text-gray-400">Total Problems</div>
-          <div className="text-sm text-gray-500 mt-1">
+        <div className={`rounded-lg p-6 transition-colors duration-200 ${
+          theme === 'dark' ? 'bg-gray-800' : 'bg-white border border-gray-200'
+        }`}>
+          <div className={`text-3xl font-bold mb-2 transition-colors duration-200 ${
+            theme === 'dark' ? 'text-white' : 'text-gray-900'
+          }`}>{totalProblems}</div>
+          <div className={`transition-colors duration-200 ${
+            theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+          }`}>Total Problems</div>
+          <div className={`text-sm mt-1 transition-colors duration-200 ${
+            theme === 'dark' ? 'text-gray-500' : 'text-gray-500'
+          }`}>
             {publishedProblems} published, {draftProblems} draft, {archivedProblems} archived
           </div>
         </div>
 
-        <div className="bg-gray-800 rounded-lg p-6">
+        <div className={`rounded-lg p-6 transition-colors duration-200 ${
+          theme === 'dark' ? 'bg-gray-800' : 'bg-white border border-gray-200'
+        }`}>
           <div className="text-3xl font-bold text-green-400 mb-2">{totalSolutions}</div>
-          <div className="text-gray-400">Total Solutions</div>
-          <div className="text-sm text-gray-500 mt-1">
+          <div className={`transition-colors duration-200 ${
+            theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+          }`}>Total Solutions</div>
+          <div className={`text-sm mt-1 transition-colors duration-200 ${
+            theme === 'dark' ? 'text-gray-500' : 'text-gray-500'
+          }`}>
             Across {problemsWithSolutions} problems
           </div>
         </div>
 
-        <div className="bg-gray-800 rounded-lg p-6">
+        <div className={`rounded-lg p-6 transition-colors duration-200 ${
+          theme === 'dark' ? 'bg-gray-800' : 'bg-white border border-gray-200'
+        }`}>
           <div className="text-3xl font-bold text-blue-400 mb-2">
             {problemsWithSolutions}
           </div>
-          <div className="text-gray-400">Problems with Solutions</div>
-          <div className="text-sm text-gray-500 mt-1">
+          <div className={`transition-colors duration-200 ${
+            theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+          }`}>Problems with Solutions</div>
+          <div className={`text-sm mt-1 transition-colors duration-200 ${
+            theme === 'dark' ? 'text-gray-500' : 'text-gray-500'
+          }`}>
             {Math.round((problemsWithSolutions / totalProblems) * 100)}% coverage
           </div>
         </div>
 
-        <div className="bg-gray-800 rounded-lg p-6">
+        <div className={`rounded-lg p-6 transition-colors duration-200 ${
+          theme === 'dark' ? 'bg-gray-800' : 'bg-white border border-gray-200'
+        }`}>
           <div className="text-3xl font-bold text-purple-400 mb-2">
             {problemsWithoutSolutions}
           </div>
-          <div className="text-gray-400">Problems without Solutions</div>
-          <div className="text-sm text-gray-500 mt-1">
+          <div className={`transition-colors duration-200 ${
+            theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+          }`}>Problems without Solutions</div>
+          <div className={`text-sm mt-1 transition-colors duration-200 ${
+            theme === 'dark' ? 'text-gray-500' : 'text-gray-500'
+          }`}>
             Need attention
           </div>
         </div>
@@ -253,23 +283,43 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({ problems, solutions }) => {
       </div>
 
       {/* Recent Problems */}
-      <div className="mt-8 bg-gray-800 rounded-lg p-6">
-        <h3 className="text-lg font-semibold mb-4">Recent Problems</h3>
+      <div className={`mt-8 rounded-lg p-6 transition-colors duration-200 ${
+        theme === 'dark' ? 'bg-gray-800' : 'bg-white border border-gray-200'
+      }`}>
+        <h3 className={`text-lg font-semibold mb-4 transition-colors duration-200 ${
+          theme === 'dark' ? 'text-white' : 'text-gray-900'
+        }`}>Recent Problems</h3>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-gray-700">
-                <th className="text-left py-2 text-gray-400">Title</th>
-                <th className="text-left py-2 text-gray-400">Difficulty</th>
-                <th className="text-left py-2 text-gray-400">Status</th>
-                <th className="text-left py-2 text-gray-400">Solutions</th>
-                <th className="text-left py-2 text-gray-400">Created</th>
+              <tr className={`border-b transition-colors duration-200 ${
+                theme === 'dark' ? 'border-gray-700' : 'border-gray-200'
+              }`}>
+                <th className={`text-left py-2 transition-colors duration-200 ${
+                  theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                }`}>Title</th>
+                <th className={`text-left py-2 transition-colors duration-200 ${
+                  theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                }`}>Difficulty</th>
+                <th className={`text-left py-2 transition-colors duration-200 ${
+                  theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                }`}>Status</th>
+                <th className={`text-left py-2 transition-colors duration-200 ${
+                  theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                }`}>Solutions</th>
+                <th className={`text-left py-2 transition-colors duration-200 ${
+                  theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                }`}>Created</th>
               </tr>
             </thead>
             <tbody>
               {recentProblems.map((problem) => (
-                <tr key={problem.id} className="border-b border-gray-700">
-                  <td className="py-2 text-white">{problem.title}</td>
+                <tr key={problem.id} className={`border-b transition-colors duration-200 ${
+                  theme === 'dark' ? 'border-gray-700' : 'border-gray-200'
+                }`}>
+                  <td className={`py-2 transition-colors duration-200 ${
+                    theme === 'dark' ? 'text-white' : 'text-gray-900'
+                  }`}>{problem.title}</td>
                   <td className={`py-2 ${getDifficultyColor(problem.difficulty)}`}>
                     {problem.difficulty.charAt(0).toUpperCase() + problem.difficulty.slice(1)}
                   </td>
@@ -278,8 +328,12 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({ problems, solutions }) => {
                       {problem.status}
                     </span>
                   </td>
-                  <td className="py-2 text-gray-300">{problem.solution_count || 0}</td>
-                  <td className="py-2 text-gray-400 text-sm">
+                  <td className={`py-2 transition-colors duration-200 ${
+                    theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                  }`}>{problem.solution_count || 0}</td>
+                  <td className={`py-2 text-sm transition-colors duration-200 ${
+                    theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                  }`}>
                     {new Date(problem.created_at).toLocaleDateString()}
                   </td>
                 </tr>

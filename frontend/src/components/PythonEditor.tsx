@@ -367,7 +367,7 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
             fontSize: 14,
             minimap: { enabled: false },
             scrollBeyondLastLine: false,
-            automaticLayout: false,
+            automaticLayout: true,
             tabSize: 4,
             insertSpaces: true,
             wordWrap: 'on',

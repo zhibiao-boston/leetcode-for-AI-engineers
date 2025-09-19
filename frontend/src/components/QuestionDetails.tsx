@@ -794,11 +794,11 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
 
         {/* Right Panel - Code Editor */}
         <div 
-          className="flex flex-col"
+          className="flex flex-col w-full"
           style={{ width: `${100 - leftPanelWidth}%` }}
         >
           
-          <div className="flex-1 flex flex-col">
+          <div className="flex-1 flex flex-col w-full">
             {/* Loaded submission indicator */}
             {selectedSubmission && (
               <div className="flex-shrink-0 p-4 bg-purple-900/30 border-b border-purple-500/30">
@@ -825,7 +825,7 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
             {/* Code Editor - takes remaining space */}
             <div className="flex-1 w-full h-full flex flex-col">
               {/* Code Editor */}
-              <div className="flex-1" style={{ height: '500px' }}>
+              <div className="flex-1 w-full" style={{ width: '100%', minWidth: '100%', maxWidth: '100%' }}>
                 <PythonEditor
                   initialCode={getTemplateForQuestion(question)}
                   onCodeChange={handleCodeChange}

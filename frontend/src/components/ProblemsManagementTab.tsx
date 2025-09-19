@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface Problem {
   id: string;
@@ -37,6 +38,7 @@ const ProblemsManagementTab: React.FC<ProblemsManagementTabProps> = ({
   setFilterStatus,
   onCreateProblem
 }) => {
+  const { theme } = useTheme();
   const filteredProblems = problems.filter(problem => {
     const matchesSearch = problem.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          problem.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -73,12 +75,20 @@ const ProblemsManagementTab: React.FC<ProblemsManagementTabProps> = ({
           placeholder="Search problems..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+          className={`px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors duration-200 ${
+            theme === 'dark' 
+              ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+              : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+          }`}
         />
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value as any)}
-          className="px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+          className={`px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors duration-200 ${
+            theme === 'dark' 
+              ? 'bg-gray-700 border-gray-600 text-white' 
+              : 'bg-white border-gray-300 text-gray-900'
+          }`}
         >
           <option value="all">All Status</option>
           <option value="published">Published</option>
@@ -94,27 +104,57 @@ const ProblemsManagementTab: React.FC<ProblemsManagementTabProps> = ({
       </div>
 
       {/* Problems table */}
-      <div className="bg-gray-800 rounded-lg overflow-hidden">
+      <div className={`rounded-lg overflow-hidden transition-colors duration-200 ${
+        theme === 'dark' ? 'bg-gray-800' : 'bg-white border border-gray-200'
+      }`}>
         <table className="w-full">
-          <thead className="bg-gray-700">
+          <thead className={`transition-colors duration-200 ${
+            theme === 'dark' ? 'bg-gray-700' : 'bg-gray-50'
+          }`}>
             <tr>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">ID</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">Title</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">Difficulty</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">Company</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">Categories</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">Status</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">Solutions</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">Actions</th>
+              <th className={`px-4 py-3 text-left text-sm font-medium transition-colors duration-200 ${
+                theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+              }`}>ID</th>
+              <th className={`px-4 py-3 text-left text-sm font-medium transition-colors duration-200 ${
+                theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+              }`}>Title</th>
+              <th className={`px-4 py-3 text-left text-sm font-medium transition-colors duration-200 ${
+                theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+              }`}>Difficulty</th>
+              <th className={`px-4 py-3 text-left text-sm font-medium transition-colors duration-200 ${
+                theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+              }`}>Company</th>
+              <th className={`px-4 py-3 text-left text-sm font-medium transition-colors duration-200 ${
+                theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+              }`}>Categories</th>
+              <th className={`px-4 py-3 text-left text-sm font-medium transition-colors duration-200 ${
+                theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+              }`}>Status</th>
+              <th className={`px-4 py-3 text-left text-sm font-medium transition-colors duration-200 ${
+                theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+              }`}>Solutions</th>
+              <th className={`px-4 py-3 text-left text-sm font-medium transition-colors duration-200 ${
+                theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+              }`}>Actions</th>
             </tr>
           </thead>
           <tbody>
             {filteredProblems.map((problem) => (
-              <tr key={problem.id} className="border-b border-gray-700 hover:bg-gray-750">
-                <td className="px-4 py-3 text-sm text-gray-400">{problem.id.slice(-8)}</td>
+              <tr key={problem.id} className={`border-b transition-colors duration-200 hover:bg-opacity-50 ${
+                theme === 'dark' 
+                  ? 'border-gray-700 hover:bg-gray-750' 
+                  : 'border-gray-200 hover:bg-gray-50'
+              }`}>
+                <td className={`px-4 py-3 text-sm transition-colors duration-200 ${
+                  theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                }`}>{problem.id.slice(-8)}</td>
                 <td className="px-4 py-3">
-                  <div className="font-medium text-white">{problem.title}</div>
-                  <div className="text-sm text-gray-400 truncate max-w-xs">
+                  <div className={`font-medium transition-colors duration-200 ${
+                    theme === 'dark' ? 'text-white' : 'text-gray-900'
+                  }`}>{problem.title}</div>
+                  <div className={`text-sm truncate max-w-xs transition-colors duration-200 ${
+                    theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                  }`}>
                     {problem.description.substring(0, 100)}...
                   </div>
                 </td>
@@ -123,16 +163,26 @@ const ProblemsManagementTab: React.FC<ProblemsManagementTabProps> = ({
                     {problem.difficulty.charAt(0).toUpperCase() + problem.difficulty.slice(1)}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-sm text-gray-300">{problem.company || 'N/A'}</td>
+                <td className={`px-4 py-3 text-sm transition-colors duration-200 ${
+                  theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                }`}>{problem.company || 'N/A'}</td>
                 <td className="px-4 py-3">
                   <div className="flex flex-wrap gap-1">
                     {problem.categories.slice(0, 2).map((category) => (
-                      <span key={category} className="px-2 py-1 bg-gray-600 rounded text-xs text-gray-300">
+                      <span key={category} className={`px-2 py-1 rounded text-xs transition-colors duration-200 ${
+                        theme === 'dark' 
+                          ? 'bg-gray-600 text-gray-300' 
+                          : 'bg-gray-200 text-gray-700'
+                      }`}>
                         {category}
                       </span>
                     ))}
                     {problem.categories.length > 2 && (
-                      <span className="px-2 py-1 bg-gray-600 rounded text-xs text-gray-300">
+                      <span className={`px-2 py-1 rounded text-xs transition-colors duration-200 ${
+                        theme === 'dark' 
+                          ? 'bg-gray-600 text-gray-300' 
+                          : 'bg-gray-200 text-gray-700'
+                      }`}>
                         +{problem.categories.length - 2}
                       </span>
                     )}
@@ -149,7 +199,9 @@ const ProblemsManagementTab: React.FC<ProblemsManagementTabProps> = ({
                     <option value="archived">Archived</option>
                   </select>
                 </td>
-                <td className="px-4 py-3 text-sm text-gray-300">
+                <td className={`px-4 py-3 text-sm transition-colors duration-200 ${
+                  theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                }`}>
                   {problem.solution_count || 0}
                 </td>
                 <td className="px-4 py-3">
@@ -175,7 +227,9 @@ const ProblemsManagementTab: React.FC<ProblemsManagementTabProps> = ({
         
         {filteredProblems.length === 0 && (
           <div className="text-center py-8">
-            <p className="text-gray-400">No problems found matching your criteria.</p>
+            <p className={`transition-colors duration-200 ${
+              theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+            }`}>No problems found matching your criteria.</p>
             <button 
               onClick={onCreateProblem}
               className="mt-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-md transition-colors duration-200"
@@ -188,27 +242,45 @@ const ProblemsManagementTab: React.FC<ProblemsManagementTabProps> = ({
 
       {/* Summary stats */}
       <div className="mt-6 grid grid-cols-4 gap-4">
-        <div className="bg-gray-800 rounded-lg p-4">
-          <div className="text-2xl font-bold text-white">{problems.length}</div>
-          <div className="text-sm text-gray-400">Total Problems</div>
+        <div className={`rounded-lg p-4 transition-colors duration-200 ${
+          theme === 'dark' ? 'bg-gray-800' : 'bg-white border border-gray-200'
+        }`}>
+          <div className={`text-2xl font-bold transition-colors duration-200 ${
+            theme === 'dark' ? 'text-white' : 'text-gray-900'
+          }`}>{problems.length}</div>
+          <div className={`text-sm transition-colors duration-200 ${
+            theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+          }`}>Total Problems</div>
         </div>
-        <div className="bg-gray-800 rounded-lg p-4">
+        <div className={`rounded-lg p-4 transition-colors duration-200 ${
+          theme === 'dark' ? 'bg-gray-800' : 'bg-white border border-gray-200'
+        }`}>
           <div className="text-2xl font-bold text-green-400">
             {problems.filter(p => p.status === 'published').length}
           </div>
-          <div className="text-sm text-gray-400">Published</div>
+          <div className={`text-sm transition-colors duration-200 ${
+            theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+          }`}>Published</div>
         </div>
-        <div className="bg-gray-800 rounded-lg p-4">
+        <div className={`rounded-lg p-4 transition-colors duration-200 ${
+          theme === 'dark' ? 'bg-gray-800' : 'bg-white border border-gray-200'
+        }`}>
           <div className="text-2xl font-bold text-yellow-400">
             {problems.filter(p => p.status === 'draft').length}
           </div>
-          <div className="text-sm text-gray-400">Draft</div>
+          <div className={`text-sm transition-colors duration-200 ${
+            theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+          }`}>Draft</div>
         </div>
-        <div className="bg-gray-800 rounded-lg p-4">
+        <div className={`rounded-lg p-4 transition-colors duration-200 ${
+          theme === 'dark' ? 'bg-gray-800' : 'bg-white border border-gray-200'
+        }`}>
           <div className="text-2xl font-bold text-gray-400">
             {problems.filter(p => p.status === 'archived').length}
           </div>
-          <div className="text-sm text-gray-400">Archived</div>
+          <div className={`text-sm transition-colors duration-200 ${
+            theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+          }`}>Archived</div>
         </div>
       </div>
     </div>
