@@ -184,8 +184,6 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
   const handleRun = async () => {
     if (!onRun) {
       console.log('No onRun function provided');
-      setOutput('Error: No run function available');
-      setError('No run function available');
       return;
     }
     
@@ -198,26 +196,14 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
     try {
       const result = await onRun(code);
       console.log('Run result:', result);
-      
-      // Ensure we always have some output
-      const finalOutput = result.output || 'Code executed successfully!';
-      const finalError = result.error || null;
-      
-      setOutput(finalOutput);
-      setExecutionTime(result.executionTime || 0);
-      
-      if (finalError) {
-        setError(finalError);
-      } else {
-        setError(null);
+      setOutput(result.output);
+      setExecutionTime(result.executionTime);
+      if (result.error) {
+        setError(result.error);
       }
-      
-      console.log('Output set to:', finalOutput);
-      console.log('Error set to:', finalError);
     } catch (err) {
       console.error('Run error:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
-      setError(errorMessage);
+      setError(err instanceof Error ? err.message : 'Unknown error');
       setOutput('');
     } finally {
       setIsRunning(false);
@@ -232,25 +218,12 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
     onCodeChange?.(DEFAULT_TEMPLATE);
   };
 
-  const handleTestOutput = () => {
-    setOutput('Test output: This is a test message to verify output display is working!');
-    setError(null);
-    setExecutionTime(123);
-    console.log('Test output set');
-  };
-
   return (
     <div className="bg-gray-800 w-full h-full">
       {/* Editor Header - Conditional rendering */}
       {showHeader && (
         <div className="bg-gray-900 px-4 py-2 border-b border-gray-700 flex items-center justify-end">
           <div className="flex space-x-2">
-            <button
-              onClick={handleTestOutput}
-              className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-md transition-colors duration-200 text-sm"
-            >
-              Test Output
-            </button>
             <button
               onClick={handleRun}
               disabled={isRunning}
@@ -336,16 +309,6 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
             cursorSmoothCaretAnimation: 'on',
             renderWhitespace: 'selection',
             renderControlCharacters: false,
-            // Scroll bar options
-            scrollbar: {
-              vertical: 'visible',
-              horizontal: 'visible',
-              verticalScrollbarSize: 12,
-              horizontalScrollbarSize: 12,
-              useShadows: false,
-              verticalHasArrows: false,
-              horizontalHasArrows: false,
-            },
             // Focus and interaction options
             acceptSuggestionOnEnter: 'on',
             acceptSuggestionOnCommitCharacter: true,
@@ -361,9 +324,9 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
         />
       </div>
 
-      {/* Output Area - Always show when there's output or error */}
+      {/* Output Area */}
       {(output || error) && (
-        <div className="bg-gray-900 border-t border-gray-700 p-4 max-h-64 overflow-y-auto">
+        <div className="bg-gray-900 border-t border-gray-700 p-4">
           <div className="flex items-center justify-between mb-2">
             <h4 className="text-sm font-medium text-gray-400">Output:</h4>
             {executionTime && (
