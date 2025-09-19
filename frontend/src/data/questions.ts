@@ -21,7 +21,9 @@ export interface Question {
     explanation?: string;
   }[];
   testCases: TestCase[];
-  template?: string; // Custom template for the editor
+  template?: string; // Custom Python template for the editor
+  javaTemplate?: string; // Custom Java template for the editor
+  cppTemplate?: string; // Custom C++ template for the editor
 }
 
 export const sampleQuestions: Question[] = [

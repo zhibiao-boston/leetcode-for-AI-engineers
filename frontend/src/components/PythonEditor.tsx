@@ -12,6 +12,7 @@ interface PythonEditorProps {
   triggerClear?: number;
   externalCode?: string; // New prop for external code updates
   layoutTrigger?: number; // New prop to trigger layout updates
+  language?: 'python' | 'java' | 'cpp'; // Language selection
 }
 
 interface RunResult {
@@ -50,9 +51,22 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
   triggerRun = 0,
   triggerClear = 0,
   externalCode,
-  layoutTrigger = 0
+  layoutTrigger = 0,
+  language = 'python'
 }) => {
   const { theme } = useTheme();
+  
+  // Map our language names to Monaco Editor language IDs
+  const getMonacoLanguage = (lang: string) => {
+    switch (lang) {
+      case 'python': return 'python';
+      case 'java': return 'java';
+      case 'cpp': return 'cpp';
+      default: return 'python';
+    }
+  };
+  
+  const monacoLanguage = getMonacoLanguage(language);
   const [code, setCode] = useState(initialCode || DEFAULT_TEMPLATE);
   const [output, setOutput] = useState('');
   const [isRunning, setIsRunning] = useState(false);
@@ -298,8 +312,8 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
         <Editor
           height="100%"
           width="100%"
-          defaultLanguage="python"
-          language="python"
+          defaultLanguage={monacoLanguage}
+          language={monacoLanguage}
           value={code || initialCode || DEFAULT_TEMPLATE}
           onChange={handleCodeChange}
           onMount={(editor) => {

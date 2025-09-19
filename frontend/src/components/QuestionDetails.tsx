@@ -34,6 +34,14 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loadingSubmissions, setLoadingSubmissions] = useState(false);
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
+  const [selectedLanguage, setSelectedLanguage] = useState<'python' | 'java' | 'cpp'>('python');
+  
+  // Language configurations
+  const languageConfig = {
+    python: { name: 'Python 3', extension: 'py' },
+    java: { name: 'Java', extension: 'java' },
+    cpp: { name: 'C++', extension: 'cpp' }
+  };
   
   // Test case related state
   const [activeTestCaseTab, setActiveTestCaseTab] = useState(0);
@@ -57,13 +65,51 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
     }));
   };
 
-  const getTemplateForQuestion = (question: Question | null) => {
+  const getTemplateForQuestion = (question: Question | null, language: 'python' | 'java' | 'cpp' = 'python') => {
     if (!question) return '';
-    return question.template || `class Solution {
-    public int[] findArray(int[] pref) {
+    
+    if (language === 'java') {
+      return question.javaTemplate || `public class Solution {
+    public void solve() {
+        // Your Java code here
         
     }
+    
+    public static void main(String[] args) {
+        Solution solution = new Solution();
+        solution.solve();
+    }
 }`;
+    } else if (language === 'cpp') {
+      return question.cppTemplate || `#include <iostream>
+#include <vector>
+#include <string>
+using namespace std;
+
+class Solution {
+public:
+    void solve() {
+        // Your C++ code here
+        
+    }
+};
+
+int main() {
+    Solution solution;
+    solution.solve();
+    return 0;
+}`;
+    }
+    
+    // Default to Python
+    return question.template || `def solve():
+    """
+    Your Python code here
+    """
+    pass
+
+if __name__ == "__main__":
+    solve()`;
   };
 
   const handleCodeChange = useCallback((value: string | undefined) => {
@@ -134,7 +180,7 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
     try {
       const submissionData = {
         problem_id: question.id,
-        language: 'java',
+        language: selectedLanguage,
         code: code,
         status: result as any,
         execution_time: Math.floor(Math.random() * 100) + 10,
@@ -221,10 +267,10 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
 
   useEffect(() => {
     if (question) {
-      setCurrentCode(getTemplateForQuestion(question));
+      setCurrentCode(getTemplateForQuestion(question, selectedLanguage));
       fetchSubmissions();
     }
-  }, [question, fetchSubmissions]);
+  }, [question, selectedLanguage, fetchSubmissions]);
 
   useEffect(() => {
     setLayoutTrigger(prev => prev + 1);
@@ -276,7 +322,7 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
                   : question.difficulty === 'medium'
                   ? 'bg-yellow-100 text-yellow-800'
                   : 'bg-red-100 text-red-800'
-              }`}>
+                }`}>
                   {question.difficulty}
                 </span>
               
@@ -305,7 +351,7 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
               {isRunning ? 'Running...' : 'Run Code'}
             </button>
             <button
-              onClick={() => executeAllTestCases(currentCode)}
+              onClick={() => executeAllTestCases(currentCode || getTemplateForQuestion(question, selectedLanguage))}
               className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition-colors duration-200 text-sm font-medium"
             >
               Test Code
@@ -327,40 +373,40 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
             theme === 'dark' ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-gray-50'
           }`}>
             <div className="flex space-x-1">
-              <button
-                onClick={() => setActiveTab('description')}
+          <button
+            onClick={() => setActiveTab('description')}
                 className={`px-4 py-3 text-sm font-medium border-b-2 transition-all duration-200 ${
-                  activeTab === 'description'
+              activeTab === 'description'
                     ? theme === 'dark'
                       ? 'border-blue-400 text-blue-400'
                       : 'border-blue-500 text-blue-600'
                     : theme === 'dark'
                       ? 'border-transparent text-gray-400 hover:text-gray-300'
                       : 'border-transparent text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                Description
-              </button>
-              <button
-                onClick={() => setActiveTab('submissions')}
+            }`}
+          >
+            Description
+          </button>
+          <button
+            onClick={() => setActiveTab('submissions')}
                 className={`px-4 py-3 text-sm font-medium border-b-2 transition-all duration-200 ${
-                  activeTab === 'submissions'
+              activeTab === 'submissions'
                     ? theme === 'dark'
                       ? 'border-blue-400 text-blue-400'
                       : 'border-blue-500 text-blue-600'
                     : theme === 'dark'
                       ? 'border-transparent text-gray-400 hover:text-gray-300'
                       : 'border-transparent text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                Submissions ({submissions.length})
-              </button>
-            </div>
-          </div>
+            }`}
+          >
+            Submissions ({submissions.length})
+          </button>
+        </div>
+      </div>
 
           {/* Tab Content */}
           <div className="flex-1 overflow-y-auto p-6">
-            {activeTab === 'description' ? (
+          {activeTab === 'description' ? (
             <div className="space-y-6">
               <div>
                 <h2 className={`text-lg font-semibold mb-3 transition-colors duration-200 ${
@@ -503,10 +549,10 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
               )}
             </div>
           )}
-          </div>
-        </div>
+                </div>
+              </div>
 
-        {/* Right Panel - Code Editor */}
+              {/* Right Panel - Code Editor */}
         <div className="w-1/2 flex flex-col">
           {/* Editor Header */}
           <div className={`border-b px-4 py-3 transition-colors duration-200 ${
@@ -517,11 +563,19 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
                 <span className={`text-sm font-medium transition-colors duration-200 ${
                   theme === 'dark' ? 'text-purple-400' : 'text-purple-600'
                 }`}>Code</span>
-              </div>
+                </div>
                           <div className="flex items-center space-x-2">
-                <span className={`text-xs transition-colors duration-200 ${
-                  theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                }`}>Java</span>
+                <select
+                  value={selectedLanguage}
+                  onChange={(e) => setSelectedLanguage(e.target.value as 'python' | 'java' | 'cpp')}
+                  className={`text-xs transition-colors duration-200 bg-transparent border-none outline-none cursor-pointer ${
+                    theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                  }`}
+                >
+                  <option value="python">{languageConfig.python.name}</option>
+                  <option value="java">{languageConfig.java.name}</option>
+                  <option value="cpp">{languageConfig.cpp.name}</option>
+                </select>
                 <div className={`w-2 h-2 rounded-full bg-green-500`}></div>
                 <span className={`text-xs transition-colors duration-200 ${
                   theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
@@ -533,14 +587,15 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
           <div className="flex-1 flex flex-col">
             {/* Code Editor */}
             <div className="flex-1 w-full" style={{ width: '100%', minWidth: '100%', maxWidth: '100%' }}>
-              <PythonEditor
-                initialCode={getTemplateForQuestion(question)}
-                onCodeChange={handleCodeChange}
+                      <PythonEditor
+                initialCode={getTemplateForQuestion(question, selectedLanguage)}
+                        onCodeChange={handleCodeChange}
                 height="100%"
                 showHeader={false}
-                externalCode={selectedSubmission?.code}
+                language={selectedLanguage}
+                        externalCode={selectedSubmission?.code}
                 layoutTrigger={layoutTrigger}
-              />
+                      />
             </div>
 
             {/* Test Cases Section - Bottom of right panel */}
