@@ -514,7 +514,10 @@ if __name__ == "__main__":
                   {Array.isArray(submissions) && submissions.map((submission, index) => (
                     <div
                       key={submission.id}
-                      onClick={() => setSelectedSubmission(submission)}
+                      onClick={() => {
+                        setSelectedSubmission(submission);
+                        setCurrentCode(submission.code); // Update current code state to match the selected submission
+                      }}
                       className={`p-3 border rounded cursor-pointer transition-colors duration-200 ${
                         selectedSubmission?.id === submission.id
                           ? theme === 'dark'
@@ -581,10 +584,37 @@ if __name__ == "__main__":
                   <option value="java">{languageConfig.java.name}</option>
                   <option value="cpp">{languageConfig.cpp.name}</option>
                 </select>
-                <div className={`w-2 h-2 rounded-full bg-green-500`}></div>
-                <span className={`text-xs transition-colors duration-200 ${
-                  theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                }`}>Auto</span>
+                
+                {/* Viewing History Indicator and Reset Button */}
+                {selectedSubmission ? (
+                  <>
+                    <span className={`text-xs px-2 py-1 rounded ${
+                      theme === 'dark' ? 'bg-blue-900/30 text-blue-300' : 'bg-blue-100 text-blue-700'
+                    }`}>
+                      查看历史提交
+                    </span>
+                    <button
+                      onClick={() => {
+                        setSelectedSubmission(null);
+                        setCurrentCode(getTemplateForQuestion(question, selectedLanguage));
+                      }}
+                      className={`text-xs px-2 py-1 rounded transition-colors duration-200 ${
+                        theme === 'dark'
+                          ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      }`}
+                    >
+                      回到编辑
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <div className={`w-2 h-2 rounded-full bg-green-500`}></div>
+                    <span className={`text-xs transition-colors duration-200 ${
+                      theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                    }`}>Auto</span>
+                  </>
+                )}
                         </div>
                       </div>
                     </div>
