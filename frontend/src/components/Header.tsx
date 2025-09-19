@@ -21,7 +21,6 @@ const Header: React.FC = () => {
   };
 
   const isAdminDashboard = location.pathname === '/admin';
-  const isHomePage = location.pathname === '/';
 
   return (
     <>
