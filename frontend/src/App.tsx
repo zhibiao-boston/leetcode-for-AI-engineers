@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { sampleQuestions, Question } from './data/questions';
 import { AuthProvider } from './contexts/AuthContext';
@@ -11,6 +11,32 @@ import UserProfilePage from './components/UserProfilePage';
 function App() {
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(sampleQuestions[0]);
   const [isQuestionListVisible, setIsQuestionListVisible] = useState(true);
+
+  // Suppress ResizeObserver errors globally
+  useEffect(() => {
+    const handleResizeObserverError = (e: ErrorEvent) => {
+      if (e.message === 'ResizeObserver loop completed with undelivered notifications.') {
+        e.stopImmediatePropagation();
+        e.preventDefault();
+        return false;
+      }
+    };
+
+    const handleUnhandledRejection = (e: PromiseRejectionEvent) => {
+      if (e.reason && e.reason.message && e.reason.message.includes('ResizeObserver')) {
+        e.preventDefault();
+        return false;
+      }
+    };
+
+    window.addEventListener('error', handleResizeObserverError);
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    
+    return () => {
+      window.removeEventListener('error', handleResizeObserverError);
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+    };
+  }, []);
 
   // Handle question selection and auto-hide list
   const handleSelectQuestion = (question: Question) => {

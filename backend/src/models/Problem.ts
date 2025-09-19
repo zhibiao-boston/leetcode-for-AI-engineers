@@ -290,10 +290,25 @@ export class ProblemModel {
       values.push(tag);
     }
 
-    query += ` GROUP BY p.id ORDER BY p.created_at DESC LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}`;
-    values.push(limit, offset);
+    // Use mock data instead of database
+    let filteredProblems = mockProblems.filter(problem => {
+      if (status && problem.status !== status) return false;
+      if (difficulty && problem.difficulty !== difficulty) return false;
+      if (company && problem.company !== company) return false;
+      if (category && !problem.categories.includes(category)) return false;
+      if (tag && !problem.tags.includes(tag)) return false;
+      return true;
+    });
 
-    const result = await pool.query(query, values);
-    return result.rows;
+    // Sort by created_at DESC and apply pagination
+    filteredProblems = filteredProblems
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .slice(offset, offset + limit);
+
+    // Add solution count (mock data - assume 0 for now)
+    return filteredProblems.map(problem => ({
+      ...problem,
+      solution_count: 0
+    })) as Problem[];
   }
 }

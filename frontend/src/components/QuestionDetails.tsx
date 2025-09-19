@@ -31,13 +31,13 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
   const [isRunning, setIsRunning] = useState(false);
   const [triggerRun, setTriggerRun] = useState(0);
   const [triggerClear, setTriggerClear] = useState(0);
-  const [currentCode, setCurrentCode] = useState('');
   const [activeTab, setActiveTab] = useState<'description' | 'submissions'>('description');
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loadingSubmissions, setLoadingSubmissions] = useState(false);
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
-  const [leftPanelWidth, setLeftPanelWidth] = useState(50); // Percentage width for left panel
+  const [leftPanelWidth, setLeftPanelWidth] = useState(60); // Percentage width for left panel (60% left, 40% right)
   const [isResizing, setIsResizing] = useState(false);
+  const [layoutTrigger, setLayoutTrigger] = useState(0);
 
   // Fetch submissions for current problem
   const fetchSubmissions = useCallback(async () => {
@@ -68,7 +68,7 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
     if (question && token) {
       fetchSubmissions();
     }
-  }, [question, fetchSubmissions]);
+  }, [question, token, fetchSubmissions]);
 
   // Python execution function
   const executePythonCode = async (code: string): Promise<{ output: string; error?: string; executionTime: number }> => {
@@ -137,7 +137,6 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
 
   const handleCodeChange = (code: string) => {
     // Code change handler - can be extended for auto-save functionality
-    setCurrentCode(code);
     console.log('Code changed:', code.length, 'characters');
   };
 
@@ -211,7 +210,6 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
   // Handle clicking on a submission to load code into editor
   const handleLoadSubmission = (submission: Submission) => {
     setSelectedSubmission(submission);
-    setCurrentCode(submission.code);
     // Switch to description tab to show the loaded code
     setActiveTab('description');
   };
@@ -231,13 +229,17 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
     const containerRect = container.getBoundingClientRect();
     const newLeftWidth = ((e.clientX - containerRect.left) / containerRect.width) * 100;
     
-    // Constrain between 20% and 80%
-    const constrainedWidth = Math.min(Math.max(newLeftWidth, 20), 80);
+    // Constrain between 30% and 70% for better balance
+    const constrainedWidth = Math.min(Math.max(newLeftWidth, 30), 70);
     setLeftPanelWidth(constrainedWidth);
   }, [isResizing]);
 
   const handleMouseUp = useCallback(() => {
     setIsResizing(false);
+    // Trigger layout update for the editor
+    setTimeout(() => {
+      setLayoutTrigger(prev => prev + 1);
+    }, 100);
   }, []);
 
   // Add event listeners for mouse move and up
@@ -504,40 +506,42 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
             <h2 className="text-lg font-semibold text-white">Code Editor</h2>
           </div>
           
-          <div className="flex-1 p-6">
-            <div className="h-full">
-              {/* Loaded submission indicator */}
-              {selectedSubmission && (
-                <div className="mb-4 p-3 bg-purple-900/30 border border-purple-500/30 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-purple-400 text-sm font-medium">📋 Loaded from submission</span>
-                      <span className="text-gray-400 text-sm">
-                        {formatDate(selectedSubmission.submitted_at)} • {selectedSubmission.language.toUpperCase()}
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => setSelectedSubmission(null)}
-                      className="text-gray-400 hover:text-white transition-colors duration-200"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              )}
-              
-              <div className="mb-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-gray-400">Python 3</span>
+          <div className="flex-1 flex flex-col">
+            {/* Loaded submission indicator */}
+            {selectedSubmission && (
+              <div className="flex-shrink-0 p-4 bg-purple-900/30 border-b border-purple-500/30">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span className="text-xs text-gray-400">Ready</span>
+                    <span className="text-purple-400 text-sm font-medium">📋 Loaded from submission</span>
+                    <span className="text-gray-400 text-sm">
+                      {formatDate(selectedSubmission.submitted_at)} • {selectedSubmission.language.toUpperCase()}
+                    </span>
                   </div>
+                  <button
+                    onClick={() => setSelectedSubmission(null)}
+                    className="text-gray-400 hover:text-white transition-colors duration-200"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
                 </div>
               </div>
+            )}
             
+            {/* Language indicator */}
+            <div className="flex-shrink-0 px-6 py-3 bg-gray-800 border-b border-gray-700">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-400">Python 3</span>
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span className="text-xs text-gray-400">Ready</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Code Editor - takes remaining space */}
+            <div className="flex-1 w-full h-full">
               <PythonEditor
                 initialCode={`class Solution:
     def solve(self, input_data):
@@ -561,11 +565,12 @@ if __name__ == "__main__":
 `}
                 onCodeChange={handleCodeChange}
                 onRun={handleCodeRun}
-                height="400px"
+                height="100%"
                 showHeader={false}
                 triggerRun={triggerRun}
                 triggerClear={triggerClear}
                 externalCode={selectedSubmission?.code}
+                layoutTrigger={layoutTrigger}
               />
             </div>
           </div>

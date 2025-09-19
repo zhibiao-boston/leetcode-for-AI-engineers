@@ -34,7 +34,7 @@ const Header: React.FC = () => {
             </div>
             <Link 
               to="/" 
-              className="text-2xl font-bold text-white hover:text-purple-300 transition-colors duration-200"
+              className="text-3xl font-bold text-white hover:text-purple-300 transition-colors duration-200"
             >
               LLM Coding
             </Link>
@@ -42,16 +42,6 @@ const Header: React.FC = () => {
 
           {/* Navigation */}
           <div className="flex items-center space-x-8">
-            <Link
-              to="/"
-              className={`text-lg font-medium transition-colors duration-200 ${
-                isHomePage 
-                  ? 'text-purple-400' 
-                  : 'text-gray-300 hover:text-white'
-              }`}
-            >
-              Interview Resources
-            </Link>
             {user && user.role === 'admin' && (
               <Link
                 to="/admin"

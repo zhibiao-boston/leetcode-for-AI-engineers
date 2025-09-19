@@ -14,7 +14,7 @@ export const mockUsers = [
   {
     id: '1',
     email: 'ai_coding@gmail.com',
-    password_hash: '$2b$12$2xQMzXP1A4zzqe1Mugi0ROH5vsQ4nE1Er3YeJacC4XIVfdv4xWoWC',
+    password_hash: '$2b$12$jUh91MwcKXSwliw26DtfRep.MpEFbdQZVqmw006gTKuRbggKgSBY2', // Admin123
     name: 'AI Coding Admin',
     role: 'admin' as const,
     created_at: new Date(),
@@ -24,7 +24,7 @@ export const mockUsers = [
   {
     id: '2',
     email: 'user@example.com',
-    password_hash: '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J8K8K8K8K',
+    password_hash: '$2b$12$PA7Yflw5vQWxF3pcErBVbObLX2aL6J2CBu9zvvl97tqBMfACyT.U6', // Password123
     name: 'Test User',
     role: 'user' as const,
     created_at: new Date(),

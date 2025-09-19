@@ -80,34 +80,30 @@ export class UserModel {
 
   // Delete user (soft delete)
   static async delete(id: string): Promise<void> {
-    const query = 'UPDATE users SET updated_at = NOW() WHERE id = $1';
-    await pool.query(query, [id]);
+    // Use mock data instead of database
+    const userIndex = mockUsers.findIndex(u => u.id === id);
+    if (userIndex !== -1) {
+      mockUsers[userIndex].updated_at = new Date();
+    }
   }
 
   // Get all users (admin only)
   static async findAll(limit = 50, offset = 0): Promise<User[]> {
-    const query = `
-      SELECT id, email, name, role, created_at, updated_at, last_login_at
-      FROM users 
-      ORDER BY created_at DESC
-      LIMIT $1 OFFSET $2
-    `;
-    
-    const result = await pool.query(query, [limit, offset]);
-    return result.rows;
+    // Use mock data instead of database
+    return mockUsers
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .slice(offset, offset + limit) as User[];
   }
 
   // Count total users
   static async count(): Promise<number> {
-    const query = 'SELECT COUNT(*) FROM users';
-    const result = await pool.query(query);
-    return parseInt(result.rows[0].count);
+    // Use mock data instead of database
+    return mockUsers.length;
   }
 
   // Check if email exists
   static async emailExists(email: string): Promise<boolean> {
-    const query = 'SELECT 1 FROM users WHERE email = $1';
-    const result = await pool.query(query, [email]);
-    return result.rows.length > 0;
+    // Use mock data instead of database
+    return mockUsers.some(u => u.email === email);
   }
 }

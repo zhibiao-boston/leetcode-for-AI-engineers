@@ -10,6 +10,7 @@ interface PythonEditorProps {
   triggerRun?: number;
   triggerClear?: number;
   externalCode?: string; // New prop for external code updates
+  layoutTrigger?: number; // New prop to trigger layout updates
 }
 
 interface RunResult {
@@ -47,13 +48,102 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
   showHeader = true,
   triggerRun = 0,
   triggerClear = 0,
-  externalCode
+  externalCode,
+  layoutTrigger = 0
 }) => {
-  const [code, setCode] = useState(initialCode);
+  const [code, setCode] = useState(initialCode || DEFAULT_TEMPLATE);
   const [output, setOutput] = useState('');
   const [isRunning, setIsRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [executionTime, setExecutionTime] = useState<number | null>(null);
+  const [editorInstance, setEditorInstance] = useState<any>(null);
+
+  // Suppress ResizeObserver errors for Monaco Editor
+  useEffect(() => {
+    const handleResizeObserverError = (e: ErrorEvent) => {
+      if (e.message === 'ResizeObserver loop completed with undelivered notifications.') {
+        e.stopImmediatePropagation();
+        e.preventDefault();
+        return false;
+      }
+    };
+
+    window.addEventListener('error', handleResizeObserverError);
+    return () => window.removeEventListener('error', handleResizeObserverError);
+  }, []);
+
+  // Ensure code is properly initialized
+  useEffect(() => {
+    if (!code || code === DEFAULT_TEMPLATE) {
+      setCode(initialCode || DEFAULT_TEMPLATE);
+    }
+  }, [initialCode, code]);
+
+  // Manual layout handling for Monaco Editor
+  useEffect(() => {
+    if (!editorInstance) return;
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      // Manually trigger layout when container resizes
+      if (entries.length > 0) {
+        setTimeout(() => {
+          editorInstance.layout();
+        }, 0);
+      }
+    });
+
+    // Observe the editor container and its parent containers
+    const editorContainer = document.querySelector('.monaco-editor');
+    const parentContainer = editorContainer?.parentElement;
+    
+    if (editorContainer) {
+      resizeObserver.observe(editorContainer);
+    }
+    if (parentContainer) {
+      resizeObserver.observe(parentContainer);
+    }
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [editorInstance]);
+
+  // Force layout when component dimensions change
+  useEffect(() => {
+    if (editorInstance) {
+      const timeoutId = setTimeout(() => {
+        editorInstance.layout();
+      }, 100);
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [editorInstance]);
+
+  // Handle window resize events
+  useEffect(() => {
+    if (!editorInstance) return;
+
+    const handleResize = () => {
+      setTimeout(() => {
+        editorInstance.layout();
+      }, 50);
+    };
+
+    window.addEventListener('resize', handleResize);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [editorInstance]);
+
+  // Handle layout trigger from parent component
+  useEffect(() => {
+    if (editorInstance && layoutTrigger > 0) {
+      setTimeout(() => {
+        editorInstance.layout();
+      }, 50);
+    }
+  }, [editorInstance, layoutTrigger]);
 
   // Handle external trigger for run
   useEffect(() => {
@@ -77,10 +167,21 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
     }
   }, [externalCode, code, onCodeChange]);
 
+  // Force editor to update when code changes
+  useEffect(() => {
+    if (editorInstance && code) {
+      const currentValue = editorInstance.getValue();
+      if (currentValue !== code) {
+        editorInstance.setValue(code);
+      }
+    }
+  }, [editorInstance, code]);
+
   const handleCodeChange = (value: string | undefined) => {
     const newCode = value || '';
     setCode(newCode);
     onCodeChange?.(newCode);
+    console.log('Code changed:', newCode.substring(0, 50) + '...');
   };
 
   const handleRun = async () => {
@@ -115,7 +216,7 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
   };
 
   return (
-    <div className="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
+    <div className="bg-gray-800 w-full h-full">
       {/* Editor Header - Conditional rendering */}
       {showHeader && (
         <div className="bg-gray-900 px-4 py-2 border-b border-gray-700 flex justify-end">
@@ -138,18 +239,42 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
       )}
 
       {/* Code Editor */}
-      <div style={{ height }}>
+      <div style={{ height, width: '100%' }} className="bg-gray-800 w-full h-full">
         <Editor
+          key={`editor-${code?.length || 0}`}
           height="100%"
+          width="100%"
           defaultLanguage="python"
-          value={code}
+          language="python"
+          value={code || initialCode || DEFAULT_TEMPLATE}
           onChange={handleCodeChange}
+          onMount={(editor) => {
+            console.log('Monaco Editor mounted successfully');
+            console.log('Initial code:', initialCode || DEFAULT_TEMPLATE);
+            console.log('Current code state:', code);
+            setEditorInstance(editor);
+            
+            // Ensure the editor has the correct initial content
+            const editorValue = editor.getValue();
+            const targetValue = initialCode || DEFAULT_TEMPLATE;
+            
+            if (!editorValue || editorValue.trim() === '') {
+              console.log('Setting editor value to:', targetValue);
+              editor.setValue(targetValue);
+            }
+            
+            // Trigger layout after a short delay to ensure proper sizing
+            setTimeout(() => {
+              editor.layout();
+              console.log('Editor layout triggered');
+            }, 100);
+          }}
           theme="vs-dark"
           options={{
             fontSize: 14,
             minimap: { enabled: false },
             scrollBeyondLastLine: false,
-            automaticLayout: true,
+            automaticLayout: false,
             tabSize: 4,
             insertSpaces: true,
             wordWrap: 'on',
@@ -157,6 +282,17 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
             folding: true,
             lineDecorationsWidth: 0,
             lineNumbersMinChars: 3,
+            readOnly: false,
+            selectOnLineNumbers: true,
+            roundedSelection: false,
+            cursorStyle: 'line',
+            contextmenu: true,
+            mouseWheelZoom: true,
+            smoothScrolling: true,
+            cursorBlinking: 'blink',
+            cursorSmoothCaretAnimation: 'on',
+            renderWhitespace: 'selection',
+            renderControlCharacters: false,
           }}
         />
       </div>
