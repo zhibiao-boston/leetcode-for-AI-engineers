@@ -47,7 +47,8 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
     executionTime: number;
   }>>({});
   const [currentCode, setCurrentCode] = useState<string>('');
-  const [runTrigger, setRunTrigger] = useState<number>(0);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [lastSubmissionTime, setLastSubmissionTime] = useState<number>(0);
 
   // Get test cases from question data
   const getTestCases = (question: Question | null) => {
@@ -520,10 +521,38 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
           {/* Run Code and Test Code Buttons */}
           <div className="flex space-x-2">
             <button
-              onClick={() => setRunTrigger(t => t + 1)}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors duration-200 text-sm font-medium"
+              onClick={async () => {
+                if (isSubmitting) {
+                  console.log('Already submitting, please wait...');
+                  return;
+                }
+                
+                // Check if too soon since last submission (minimum 3 seconds)
+                const now = Date.now();
+                if (now - lastSubmissionTime < 3000) {
+                  console.log('Please wait at least 3 seconds between submissions');
+                  return;
+                }
+                
+                setIsSubmitting(true);
+                setLastSubmissionTime(now);
+                try {
+                  // Get current code from editor or use currentCode state
+                  const codeToRun = currentCode || getTemplateForQuestion(question);
+                  console.log('Running code with length:', codeToRun.length);
+                  await handleCodeRun(codeToRun);
+                } finally {
+                  setIsSubmitting(false);
+                }
+              }}
+              disabled={isSubmitting}
+              className={`px-4 py-2 rounded-md transition-colors duration-200 text-sm font-medium ${
+                isSubmitting 
+                  ? 'bg-gray-400 cursor-not-allowed text-white' 
+                  : 'bg-blue-600 hover:bg-blue-700 text-white'
+              }`}
             >
-              Run Code
+              {isSubmitting ? 'Submitting...' : 'Run Code'}
             </button>
             <button
               onClick={() => executeAllTestCases(currentCode)}
@@ -539,7 +568,8 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
       <div className={`flex-shrink-0 border-b transition-colors duration-200 ${
         theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-gray-100 border-gray-200'
       }`}>
-        <div className="flex space-x-8 px-6">
+        <div className="flex items-center justify-between px-6">
+          <div className="flex space-x-8">
           <button
             onClick={() => setActiveTab('description')}
             className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
@@ -564,6 +594,22 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
           >
             Submissions ({submissions.length})
           </button>
+          </div>
+          
+          {/* Editor Status */}
+          <div className={`flex items-center space-x-2 px-3 py-2 rounded-md transition-colors duration-200 ${
+            theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'
+          }`}>
+            <div className={`text-sm transition-colors duration-200 ${
+              theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+            }`}>
+              Python 3 • Auto | Ready
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span className="text-xs text-gray-400">Ready</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -676,23 +722,33 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
               ) : (
                 <div className="space-y-3">
                   {submissions.map((submission) => (
-                    <div key={submission.id} className="bg-gray-900 rounded-lg p-4 hover:bg-gray-800 transition-colors duration-200">
+                    <div key={submission.id} className={`rounded-lg p-4 transition-colors duration-200 ${
+                      theme === 'dark' 
+                        ? 'bg-gray-900 hover:bg-gray-800' 
+                        : 'bg-white hover:bg-gray-50 border border-gray-200'
+                    }`}>
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center space-x-3">
                           <span className={`px-2 py-1 text-xs font-medium rounded-full ${statusColors[submission.status]}`}>
                             {submission.status}
                           </span>
-                          <span className="text-sm text-gray-400">
+                          <span className={`text-sm transition-colors duration-200 ${
+                            theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                          }`}>
                             {submission.language.toUpperCase()}
                           </span>
                         </div>
-                        <span className="text-sm text-gray-400">
+                        <span className={`text-sm transition-colors duration-200 ${
+                          theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                        }`}>
                           {formatDate(submission.submitted_at)}
                         </span>
                       </div>
                       
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4 text-sm text-gray-400">
+                        <div className={`flex items-center space-x-4 text-sm transition-colors duration-200 ${
+                          theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                        }`}>
                           <span>⏱️ {formatExecutionTime(submission.execution_time)}</span>
                           <span>💾 {formatMemoryUsage(submission.memory_usage)}</span>
                           <span>✅ {submission.test_cases_passed}/{submission.total_test_cases}</span>
@@ -700,7 +756,11 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
                         
                         <button
                           onClick={() => handleLoadSubmission(submission)}
-                          className="text-purple-400 hover:text-purple-300 text-sm font-medium transition-colors duration-200 flex items-center space-x-1"
+                          className={`text-sm font-medium transition-colors duration-200 flex items-center space-x-1 ${
+                            theme === 'dark' 
+                              ? 'text-purple-400 hover:text-purple-300' 
+                              : 'text-purple-600 hover:text-purple-700'
+                          }`}
                         >
                           <span>📋 Load Code</span>
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -718,13 +778,17 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
 
         {/* Resizable Divider */}
         <div
-          className={`w-1 bg-gray-600 hover:bg-gray-500 cursor-col-resize flex-shrink-0 transition-colors duration-200 ${
-            isResizing ? 'bg-gray-500' : ''
+          className={`w-1 cursor-col-resize flex-shrink-0 transition-colors duration-200 ${
+            theme === 'dark'
+              ? `bg-gray-600 hover:bg-gray-500 ${isResizing ? 'bg-gray-500' : ''}`
+              : `bg-gray-300 hover:bg-gray-400 ${isResizing ? 'bg-gray-400' : ''}`
           }`}
           onMouseDown={handleMouseDown}
         >
           <div className="w-full h-full flex items-center justify-center">
-            <div className="w-1 h-8 bg-gray-400 rounded-full"></div>
+            <div className={`w-1 h-8 rounded-full ${
+              theme === 'dark' ? 'bg-gray-400' : 'bg-gray-500'
+            }`}></div>
           </div>
         </div>
 
@@ -757,48 +821,20 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
               </div>
             )}
             
-            {/* Language indicator */}
-            <div className="flex-shrink-0 px-6 py-3 bg-gray-800 border-b border-gray-700">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-400">Python 3</span>
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="text-xs text-gray-400">Ready</span>
-                </div>
-              </div>
-            </div>
             
             {/* Code Editor - takes remaining space */}
             <div className="flex-1 w-full h-full flex flex-col">
-              {/* Code Editor Toolbar */}
-              <div className={`flex-shrink-0 px-4 py-2 border-b transition-colors duration-200 ${
-                theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-gray-100 border-gray-200'
-              }`}>
-                <div className="flex items-center justify-between">
-                  <div className={`text-sm transition-colors duration-200 ${
-                    theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-                  }`}>
-                    Python 3 • Auto | Ready
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span className="text-xs text-gray-400">Ready</span>
-                  </div>
-                </div>
-              </div>
-              
               {/* Code Editor */}
               <div className="flex-1" style={{ height: '500px' }}>
                 <PythonEditor
-                initialCode={getTemplateForQuestion(question)}
-                onCodeChange={handleCodeChange}
-                onRun={handleCodeRun}
-                height="100%"
-                showHeader={false}
-                triggerRun={runTrigger}
-                externalCode={selectedSubmission?.code}
-                layoutTrigger={layoutTrigger}
-              />
+                  initialCode={getTemplateForQuestion(question)}
+                  onCodeChange={handleCodeChange}
+                  onRun={handleCodeRun}
+                  height="100%"
+                  showHeader={false}
+                  externalCode={selectedSubmission?.code}
+                  layoutTrigger={layoutTrigger}
+                />
               </div>
               
               {/* Test Cases Section */}

@@ -115,6 +115,39 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
     if (editorInstance) {
       const timeoutId = setTimeout(() => {
         editorInstance.layout();
+        
+        // Force the editor to take full width
+        const editorElement = editorInstance.getDomNode();
+        if (editorElement) {
+          editorElement.style.width = '100%';
+          editorElement.style.minWidth = '100%';
+          editorElement.style.maxWidth = '100%';
+          editorElement.style.flex = '1';
+          editorElement.style.display = 'flex';
+          editorElement.style.flexDirection = 'column';
+          
+          // Also set the parent container
+          const parentElement = editorElement.parentElement;
+          if (parentElement) {
+            parentElement.style.width = '100%';
+            parentElement.style.minWidth = '100%';
+            parentElement.style.maxWidth = '100%';
+            parentElement.style.flex = '1';
+          }
+          
+          // Set the root container as well
+          const rootElement = editorElement.closest('.w-full.h-full') as HTMLElement;
+          if (rootElement) {
+            rootElement.style.width = '100%';
+            rootElement.style.minWidth = '100%';
+            rootElement.style.maxWidth = '100%';
+          }
+        }
+        
+        // Force layout again after style changes
+        setTimeout(() => {
+          editorInstance.layout();
+        }, 50);
       }, 100);
       
       return () => clearTimeout(timeoutId);
@@ -221,9 +254,12 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
   };
 
   return (
-    <div className={`w-full h-full transition-colors duration-200 ${
-      theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'
-    }`}>
+    <div 
+      className={`w-full h-full transition-colors duration-200 ${
+        theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'
+      }`}
+      style={{ width: '100%', minWidth: '100%', maxWidth: '100%' }}
+    >
       {/* Editor Header - Conditional rendering */}
       {showHeader && (
         <div className={`px-4 py-2 border-b flex items-center justify-end transition-colors duration-200 ${
@@ -249,7 +285,7 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
 
       {/* Code Editor */}
       <div 
-        style={{ height, width: '100%' }} 
+        style={{ height, width: '100%', minWidth: '100%', maxWidth: '100%' }} 
         className={`w-full h-full transition-colors duration-200 ${
           theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'
         }`}
@@ -278,10 +314,43 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
               editor.setValue(targetValue);
             }
             
-            // Focus the editor after mounting
+            // Focus the editor after mounting and force layout
             setTimeout(() => {
               editor.focus();
               editor.layout();
+              
+              // Force the editor to take full width
+              const editorElement = editor.getDomNode();
+              if (editorElement) {
+                editorElement.style.width = '100%';
+                editorElement.style.minWidth = '100%';
+                editorElement.style.maxWidth = '100%';
+                editorElement.style.flex = '1';
+                editorElement.style.display = 'flex';
+                editorElement.style.flexDirection = 'column';
+                
+                // Also set the parent container
+                const parentElement = editorElement.parentElement;
+                if (parentElement) {
+                  parentElement.style.width = '100%';
+                  parentElement.style.minWidth = '100%';
+                  parentElement.style.maxWidth = '100%';
+                  parentElement.style.flex = '1';
+                }
+                
+                // Set the root container as well
+                const rootElement = editorElement.closest('.w-full.h-full') as HTMLElement;
+                if (rootElement) {
+                  rootElement.style.width = '100%';
+                  rootElement.style.minWidth = '100%';
+                  rootElement.style.maxWidth = '100%';
+                }
+              }
+              
+              // Force layout again after style changes
+              setTimeout(() => {
+                editor.layout();
+              }, 50);
             }, 100);
             
             // Prevent editor from losing focus during typing
