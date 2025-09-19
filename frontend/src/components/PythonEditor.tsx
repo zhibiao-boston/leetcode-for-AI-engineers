@@ -216,18 +216,19 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
     <div className="bg-gray-800 w-full h-full">
       {/* Editor Header - Conditional rendering */}
       {showHeader && (
-        <div className="bg-gray-900 px-4 py-2 border-b border-gray-700 flex justify-end">
+        <div className="bg-gray-900 px-4 py-2 border-b border-gray-700 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-white">Code Editor</h2>
           <div className="flex space-x-2">
             <button
               onClick={handleRun}
               disabled={isRunning}
               className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white px-4 py-2 rounded-md transition-colors duration-200 text-sm"
             >
-              {isRunning ? 'Running...' : 'Run'}
+              {isRunning ? 'Running...' : 'Run Code'}
             </button>
             <button
               onClick={handleClear}
-              className="bg-gray-600 hover:bg-gray-500 text-white px-3 py-1 rounded-md transition-colors duration-200 text-sm"
+              className="bg-gray-600 hover:bg-gray-500 text-white px-3 py-2 rounded-md transition-colors duration-200 text-sm"
             >
               Clear
             </button>
@@ -313,7 +314,6 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
             // Prevent focus issues
             disableLayerHinting: true,
             disableMonospaceOptimizations: true,
-            enableSplitViewResizing: false,
             fixedOverflowWidgets: true,
           }}
         />
