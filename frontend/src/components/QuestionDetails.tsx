@@ -126,7 +126,10 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
 
   // Create submission record
   const createSubmission = async (code: string, result: string) => {
-    if (!user || !question || !token) return;
+    if (!user || !question || !token) {
+      console.log('Missing data for submission:', { user: !!user, question: !!question, token: !!token });
+      return;
+    }
 
     try {
       const submissionData = {
@@ -140,6 +143,8 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
         total_test_cases: 2
       };
 
+      console.log('Creating submission:', submissionData);
+
       const response = await fetch('http://localhost:8000/api/submissions', {
         method: 'POST',
         headers: {
@@ -149,8 +154,15 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
         body: JSON.stringify(submissionData)
       });
 
+      console.log('Submission response:', response.status, response.statusText);
+
       if (response.ok) {
+        const responseData = await response.json();
+        console.log('Submission created successfully:', responseData);
         fetchSubmissions();
+      } else {
+        const errorData = await response.text();
+        console.error('Submission failed:', response.status, errorData);
       }
     } catch (error) {
       console.error('Error creating submission:', error);
@@ -171,8 +183,12 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
   };
 
   const fetchSubmissions = useCallback(async () => {
-    if (!question || !token) return;
+    if (!question || !token) {
+      console.log('Cannot fetch submissions - missing data:', { question: !!question, token: !!token });
+      return;
+    }
     
+    console.log('Fetching submissions for question:', question.id);
     setLoadingSubmissions(true);
     try {
       const response = await fetch(`http://localhost:8000/api/submissions?problem_id=${question.id}`, {
@@ -181,9 +197,15 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
         }
       });
       
+      console.log('Fetch submissions response:', response.status, response.statusText);
+      
       if (response.ok) {
         const data = await response.json();
+        console.log('Fetched submissions:', data);
         setSubmissions(data);
+      } else {
+        const errorData = await response.text();
+        console.error('Failed to fetch submissions:', response.status, errorData);
       }
     } catch (error) {
       console.error('Error fetching submissions:', error);
@@ -291,11 +313,49 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
       <div className="flex-1 flex overflow-hidden">
         {/* Left Panel - Question Description */}
         <div 
-          className={`w-1/2 border-r p-6 overflow-y-auto transition-colors duration-200 ${
+          className={`w-1/2 border-r overflow-hidden transition-colors duration-200 ${
             theme === 'dark' ? 'border-gray-700' : 'border-gray-200'
           }`}
+        >
+          {/* Tab Navigation */}
+          <div className={`border-b px-4 transition-colors duration-200 ${
+            theme === 'dark' ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-gray-50'
+          }`}>
+            <div className="flex space-x-1">
+              <button
+                onClick={() => setActiveTab('description')}
+                className={`px-4 py-3 text-sm font-medium border-b-2 transition-all duration-200 ${
+                  activeTab === 'description'
+                    ? theme === 'dark'
+                      ? 'border-blue-400 text-blue-400'
+                      : 'border-blue-500 text-blue-600'
+                    : theme === 'dark'
+                      ? 'border-transparent text-gray-400 hover:text-gray-300'
+                      : 'border-transparent text-gray-600 hover:text-gray-900'
+                }`}
               >
-          {activeTab === 'description' ? (
+                Description
+              </button>
+              <button
+                onClick={() => setActiveTab('submissions')}
+                className={`px-4 py-3 text-sm font-medium border-b-2 transition-all duration-200 ${
+                  activeTab === 'submissions'
+                    ? theme === 'dark'
+                      ? 'border-blue-400 text-blue-400'
+                      : 'border-blue-500 text-blue-600'
+                    : theme === 'dark'
+                      ? 'border-transparent text-gray-400 hover:text-gray-300'
+                      : 'border-transparent text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Submissions ({submissions.length})
+              </button>
+            </div>
+          </div>
+
+          {/* Tab Content */}
+          <div className="flex-1 overflow-y-auto p-6">
+            {activeTab === 'description' ? (
             <div className="space-y-6">
               <div>
                 <h2 className={`text-lg font-semibold mb-3 transition-colors duration-200 ${
@@ -381,10 +441,6 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
           ) : (
             // Submissions tab content
             <div className="space-y-4">
-              <h2 className={`text-lg font-semibold transition-colors duration-200 ${
-                theme === 'dark' ? 'text-white' : 'text-gray-900'
-              }`}>Submissions</h2>
-              
               {loadingSubmissions ? (
                 <div className="text-center py-8">
                   <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
@@ -442,7 +498,8 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
               )}
             </div>
           )}
-              </div>
+          </div>
+        </div>
 
         {/* Right Panel - Code Editor */}
         <div className="w-1/2 flex flex-col">
