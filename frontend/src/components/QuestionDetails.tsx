@@ -115,7 +115,7 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
       
       // Default success message
       if (!output) {
-        output = 'Code executed successfully.\nNo output generated.';
+        output = 'Code executed successfully!\nExecution completed without errors.';
       }
       
       return {
@@ -480,9 +480,6 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
           className="flex flex-col"
           style={{ width: `${100 - leftPanelWidth}%` }}
         >
-          <div className="flex-shrink-0 bg-gray-800 border-b border-gray-700 px-6 py-3">
-            <h2 className="text-lg font-semibold text-white">Code Editor</h2>
-          </div>
           
           <div className="flex-1 flex flex-col">
             {/* Loaded submission indicator */}

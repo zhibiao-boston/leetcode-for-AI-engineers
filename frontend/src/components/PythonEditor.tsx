@@ -182,8 +182,12 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
   };
 
   const handleRun = async () => {
-    if (!onRun) return;
+    if (!onRun) {
+      console.log('No onRun function provided');
+      return;
+    }
     
+    console.log('Running code:', code.substring(0, 100) + '...');
     setIsRunning(true);
     setError(null);
     setOutput('Running...');
@@ -191,12 +195,14 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
     
     try {
       const result = await onRun(code);
+      console.log('Run result:', result);
       setOutput(result.output);
       setExecutionTime(result.executionTime);
       if (result.error) {
         setError(result.error);
       }
     } catch (err) {
+      console.error('Run error:', err);
       setError(err instanceof Error ? err.message : 'Unknown error');
       setOutput('');
     } finally {
