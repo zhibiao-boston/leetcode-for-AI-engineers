@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import AuthModal from './AuthModal';
@@ -11,10 +11,22 @@ const Header: React.FC = () => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const location = useLocation();
+  const navigate = useNavigate();
 
   const handleSignInClick = () => {
     setAuthMode('login');
     setShowAuthModal(true);
+  };
+
+  const handleHomeClick = () => {
+    // Force navigation to home and clear any URL parameters
+    navigate('/', { replace: true });
+    
+    // Clear any question selection state by reloading the page
+    // This ensures we get a clean problem list view
+    setTimeout(() => {
+      window.location.reload();
+    }, 100);
   };
 
   const handleSignUpClick = () => {
@@ -37,16 +49,16 @@ const Header: React.FC = () => {
             <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">ID</span>
             </div>
-            <Link 
-              to="/" 
-              className={`text-3xl font-bold transition-colors duration-200 ${
+            <button 
+              onClick={handleHomeClick}
+              className={`text-3xl font-bold transition-colors duration-200 cursor-pointer ${
                 theme === 'dark' 
                   ? 'text-white hover:text-purple-300' 
                   : 'text-gray-900 hover:text-purple-600'
               }`}
             >
-              LLM Coding
-            </Link>
+              Code LLM from Scratch
+            </button>
           </div>
 
           {/* Navigation */}

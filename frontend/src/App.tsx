@@ -21,9 +21,9 @@ const HomePage: React.FC = () => {
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
   const [isQuestionListVisible, setIsQuestionListVisible] = useState(true);
 
-  // Set question from URL or first question when problems load
+  // Set question from URL only, don't auto-select when navigating to home
   useEffect(() => {
-    if (problems.length > 0 && !selectedQuestion) {
+    if (problems.length > 0) {
       const urlParams = new URLSearchParams(window.location.search);
       const questionId = urlParams.get('question');
       
@@ -31,14 +31,26 @@ const HomePage: React.FC = () => {
         const question = problems.find(p => p.id === questionId);
         if (question) {
           setSelectedQuestion(question);
+          // When selecting a question, keep current list visibility
         } else {
-          setSelectedQuestion(problems[0]);
+          // If invalid question ID, clear selection and show problem list
+          setSelectedQuestion(null);
+          setIsQuestionListVisible(true);
         }
       } else {
-        setSelectedQuestion(problems[0]);
+        // No question ID in URL means we want to show the problem list
+        setSelectedQuestion(null);
+        setIsQuestionListVisible(true); // Ensure question list is visible
+        
+        // Clean up URL to remove any question parameters
+        const currentUrl = new URL(window.location.href);
+        if (currentUrl.searchParams.has('question')) {
+          currentUrl.searchParams.delete('question');
+          window.history.replaceState({}, '', currentUrl.toString());
+        }
       }
     }
-  }, [problems, selectedQuestion]);
+  }, [problems]);
 
   // Refresh problems when returning to home page (for real-time sync)
   useEffect(() => {
@@ -61,11 +73,8 @@ const HomePage: React.FC = () => {
     };
   }, [refreshProblems]);
 
-  // Handle question selection and auto-hide list
   const handleSelectQuestion = (question: Question) => {
     setSelectedQuestion(question);
-    setIsQuestionListVisible(false); // Auto-hide list when question is selected
-    
     // Update URL with question ID
     const url = new URL(window.location.href);
     url.searchParams.set('question', question.id);
@@ -156,13 +165,15 @@ function App() {
           <ProblemProvider>
             <NotificationProvider>
               <Router>
-                <div className="min-h-screen transition-colors duration-200">
+                <div className="min-h-screen max-h-screen overflow-hidden flex flex-col transition-colors duration-200">
                   <Header />
-                  <Routes>
-                    <Route path="/admin" element={<AdminDashboard />} />
-                    <Route path="/profile" element={<UserProfilePage />} />
-                    <Route path="/" element={<HomePage />} />
-                  </Routes>
+                  <div className="flex-1 overflow-auto custom-scrollbar">
+                    <Routes>
+                      <Route path="/admin" element={<AdminDashboard />} />
+                      <Route path="/profile" element={<UserProfilePage />} />
+                      <Route path="/" element={<HomePage />} />
+                    </Routes>
+                  </div>
                 </div>
               </Router>
             </NotificationProvider>
