@@ -36,6 +36,10 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<'python' | 'java' | 'cpp'>('python');
   
+  // Resizable divider state
+  const [leftPanelWidth, setLeftPanelWidth] = useState(30); // Default 30%
+  const [isDragging, setIsDragging] = useState(false);
+  
   // Language configurations
   const languageConfig = {
     python: { name: 'Python 3', extension: 'py' },
@@ -66,6 +70,34 @@ const QuestionDetails: React.FC<QuestionDetailsProps> = ({
       passed: boolean;
     }>;
   } | null>(null);
+
+  // Drag handler for resizable divider
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    setIsDragging(true);
+    const startX = e.clientX;
+    const startWidth = leftPanelWidth;
+    
+    const handleMouseMove = (e: MouseEvent) => {
+      const container = document.querySelector('.question-details-container');
+      if (!container) return;
+      
+      const containerRect = container.getBoundingClientRect();
+      const deltaX = e.clientX - startX;
+      const deltaPercent = (deltaX / containerRect.width) * 100;
+      const newLeftWidth = Math.min(Math.max(startWidth + deltaPercent, 15), 85); // Limit between 15% and 85%
+      
+      setLeftPanelWidth(newLeftWidth);
+    };
+    
+    const handleMouseUp = () => {
+      setIsDragging(false);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+    
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  }, [leftPanelWidth]);
 
   const getTestCases = (question: Question | null) => {
     if (!question || !question.testCases) return [];
@@ -338,7 +370,7 @@ if __name__ == "__main__":
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="min-h-full flex flex-col">
       {/* Header */}
       <div className={`flex-shrink-0 border-b px-6 py-4 transition-colors duration-200 ${
         theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-gray-100 border-gray-200'
@@ -407,11 +439,11 @@ if __name__ == "__main__":
       </div>
 
       {/* Content - LeetCode Style Layout */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden page-structure-guides question-details-container">
         {/* Left Panel - Question Description */}
         <div 
-          style={{ width: '30%' }}
-          className={`border-r overflow-hidden transition-colors duration-200 ${
+          style={{ width: `${leftPanelWidth}%` }}
+          className={`overflow-y-auto transition-all duration-200 custom-scrollbar section-with-guides ${
             theme === 'dark' ? 'border-gray-700' : 'border-gray-200'
           }`}
         >
@@ -769,8 +801,20 @@ if __name__ == "__main__":
                 </div>
               </div>
 
+              {/* Resizable Divider */}
+              <div 
+                className={`w-1 cursor-col-resize flex-shrink-0 resizable-divider ${
+                  isDragging ? 'dragging' : ''
+                }`}
+                onMouseDown={handleMouseDown}
+                title="Drag to resize panels"
+              />
+
               {/* Right Panel - Code Editor */}
-        <div className="flex flex-col" style={{ width: '70%' }}>
+              <div 
+                className="flex flex-col section-with-guides content-indent-guides flex-1" 
+                style={{ width: `${100 - leftPanelWidth}%` }}
+              >
           {/* Editor Header */}
           <div className={`border-b px-4 py-3 transition-colors duration-200 ${
             theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'
@@ -916,7 +960,7 @@ if __name__ == "__main__":
           </div>
         </div>
       </div>
-          </div>
+    </div>
   );
 };
 

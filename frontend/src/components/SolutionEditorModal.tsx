@@ -306,7 +306,11 @@ const SolutionEditorModal: React.FC<SolutionEditorModalProps> = ({
                     fontSize: 14,
                     lineNumbers: 'on',
                     wordWrap: 'on',
-                    automaticLayout: true
+                    automaticLayout: true,
+                    tabSize: 4,
+                    insertSpaces: true,
+                    renderWhitespace: 'boundary',
+                    autoIndent: 'full'
                   }}
                 />
               </div>

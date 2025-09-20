@@ -439,7 +439,7 @@ const PythonEditor: React.FC<PythonEditorProps> = ({
             smoothScrolling: true,
             cursorBlinking: 'blink',
             cursorSmoothCaretAnimation: 'on',
-            renderWhitespace: 'selection',
+            renderWhitespace: 'boundary',
             renderControlCharacters: false,
             // Focus and interaction options
             acceptSuggestionOnEnter: 'on',
