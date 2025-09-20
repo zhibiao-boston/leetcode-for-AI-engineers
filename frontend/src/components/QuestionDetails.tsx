@@ -361,7 +361,7 @@ if __name__ == "__main__":
             )}
             
             <div className="flex items-center space-x-3">
-              <span className="text-lg font-semibold">{question.id}. {question.title}</span>
+              <span className="text-lg font-semibold">{question.title}</span>
               <span className={`px-2 py-1 text-xs rounded font-medium ${
                 question.difficulty === 'easy' 
                   ? 'bg-green-100 text-green-800' 

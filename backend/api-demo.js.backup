@@ -1,0 +1,676 @@
+// Backend API Demo Server
+console.log('🚀 Starting Backend API Demo Server...');
+
+const express = require('express');
+const cors = require('cors');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+
+const app = express();
+const PORT = 5000;
+const JWT_SECRET = 'demo-secret-key';
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+// Mock data storage
+const users = [
+  {
+    id: '1',
+    email: 'ai_coding@gmail.com',
+    password_hash: '$2b$12$rmA357Z9ju2B59UjbYXJPuHrrYOkdnI7ysnJXsH5sMy/b5N.D5k4O',
+    name: 'AI Coding Admin',
+    role: 'admin',
+    created_at: new Date().toISOString()
+  }
+];
+
+const adminSolutions = [
+  {
+    id: '1',
+    problem_id: '1',
+    code: `class Database:
+    def __init__(self):
+        self.data = {}
+    
+    def insert(self, key, value):
+        self.data[key] = value
+    
+    def remove(self, key):
+        if key in self.data:
+            del self.data[key]
+            return True
+        return False
+    
+    def retrieve(self, key):
+        return self.data.get(key, None)`,
+    explanation: 'This solution uses a simple dictionary to store key-value pairs. Insert and retrieve operations are O(1), while remove is O(1) on average.',
+    time_complexity: 'O(1)',
+    space_complexity: 'O(n)',
+    created_by: '1',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  }
+];
+
+const problems = [
+  {
+    id: '1',
+    title: 'Design Database',
+    description: 'You need to design a simple database system that supports the following functionalities:\n\n• Insert: Add a key-value pair to the database.\n• Remove: Delete a key from the database.\n• Retrieve: Fetch the value associated with a given key.\n• Optional: Support additional functionalities like listing all keys or updating a value.',
+    difficulty: 'medium',
+    company: 'Google',
+    categories: ['coding', 'phone', 'onsite'],
+    tags: ['database', 'design', 'system'],
+    status: 'published',
+    created_at: new Date().toISOString(),
+    lastReported: '2 weeks ago',
+    template: `class Database:
+    def __init__(self):
+        """
+        Initialize the database
+        """
+        # Your code here
+        pass
+    
+    def insert(self, key, value):
+        """
+        Insert a key-value pair to the database
+        
+        Args:
+            key: The key to insert
+            value: The value to associate with the key
+        """
+        # Your code here
+        pass
+    
+    def remove(self, key):
+        """
+        Remove a key from the database
+        
+        Args:
+            key: The key to remove
+        """
+        # Your code here
+        pass
+    
+    def retrieve(self, key):
+        """
+        Retrieve the value associated with a given key
+        
+        Args:
+            key: The key to retrieve
+            
+        Returns:
+            The value associated with the key, or None if not found
+        """
+        # Your code here
+        pass
+
+# Example usage
+if __name__ == "__main__":
+    db = Database()
+    # Test your database implementation here
+    print("Database ready!")
+`,
+    examples: [
+      {
+        input: "db.insert('name', 'Alice')\\ndb.insert('age', '25')\\ndb.retrieve('name')",
+        output: "Alice",
+        explanation: "Insert two key-value pairs and retrieve the value for 'name'"
+      },
+      {
+        input: "db.insert('city', 'New York')\\ndb.remove('city')\\ndb.retrieve('city')",
+        output: "null",
+        explanation: "Insert a key, remove it, then try to retrieve it (should return null)"
+      }
+    ],
+    testCases: [
+      {
+        id: "1-1",
+        input: "db.insert('key1', 'value1')\\ndb.retrieve('key1')",
+        expectedOutput: "value1",
+        description: "Basic insert and retrieve",
+        isQuickTest: true
+      },
+      {
+        id: "1-2",
+        input: "db.insert('key2', 'value2')\\ndb.remove('key2')\\ndb.retrieve('key2')",
+        expectedOutput: "null",
+        description: "Insert, remove, then retrieve",
+        isQuickTest: true
+      },
+      {
+        id: "1-3",
+        input: "db.retrieve('nonexistent')",
+        expectedOutput: "null",
+        description: "Retrieve non-existent key",
+        isQuickTest: false
+      }
+    ]
+  },
+  {
+    id: '2',
+    title: 'Array Compression',
+    description: 'Implement an array compression algorithm that reduces the size of arrays containing repeated elements. The algorithm should:\n\n• Compress consecutive duplicate elements into a single element with a count\n• Decompress the compressed array back to its original form\n• Handle edge cases like empty arrays and single elements\n• Optimize for both time and space complexity',
+    difficulty: 'medium',
+    company: 'Microsoft',
+    categories: ['coding', 'phone'],
+    tags: ['array', 'compression', 'algorithm'],
+    status: 'published',
+    created_at: new Date().toISOString(),
+    lastReported: '1 week ago',
+    template: `def compress(arr):
+    """
+    Compress an array by grouping consecutive duplicate elements
+    
+    Args:
+        arr: List of elements to compress
+        
+    Returns:
+        List of tuples (element, count) representing compressed array
+    """
+    # Your code here
+    pass
+
+def decompress(compressed_arr):
+    """
+    Decompress a compressed array back to its original form
+    
+    Args:
+        compressed_arr: List of tuples (element, count)
+        
+    Returns:
+        Original array before compression
+    """
+    # Your code here
+    pass
+
+# Example usage
+if __name__ == "__main__":
+    # Test your compression functions here
+    test_array = [1, 1, 2, 2, 2, 3]
+    compressed = compress(test_array)
+    decompressed = decompress(compressed)
+    print(f"Original: {test_array}")
+    print(f"Compressed: {compressed}")
+    print(f"Decompressed: {decompressed}")
+`,
+    examples: [
+      {
+        input: "compress([1, 1, 2, 3, 3, 3])",
+        output: "[(1, 2), (2, 1), (3, 3)]",
+        explanation: "Compress array with consecutive duplicates"
+      },
+      {
+        input: "decompress([(1, 2), (2, 1), (3, 3)])",
+        output: "[1, 1, 2, 3, 3, 3]",
+        explanation: "Decompress back to original array"
+      }
+    ],
+    testCases: [
+      {
+        id: "2-1",
+        input: "compress([1, 1, 2, 2, 2])",
+        expectedOutput: "[(1, 2), (2, 3)]",
+        description: "Basic compression",
+        isQuickTest: true
+      },
+      {
+        id: "2-2",
+        input: "compress([])",
+        expectedOutput: "[]",
+        description: "Empty array",
+        isQuickTest: true
+      },
+      {
+        id: "2-3",
+        input: "decompress([(5, 3)])",
+        expectedOutput: "[5, 5, 5]",
+        description: "Basic decompression",
+        isQuickTest: false
+      }
+    ]
+  }
+];
+
+// Admin authentication middleware
+function authenticateAdmin(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  
+  if (!token) {
+    return res.status(401).json({ error: 'Access token required' });
+  }
+  
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const user = users.find(u => u.id === decoded.userId);
+    
+    if (!user || user.role !== 'admin') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+    
+    req.user = user;
+    next();
+  } catch (error) {
+    res.status(403).json({ error: 'Invalid or expired token' });
+  }
+}
+
+// Health check
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: 'demo',
+    message: 'Backend API Demo Server is working!'
+  });
+});
+
+// Test endpoint
+app.get('/test', (req, res) => {
+  res.json({
+    message: 'Backend API Demo Test endpoint working!',
+    timestamp: new Date().toISOString(),
+    endpoints: {
+      health: '/health',
+      test: '/test',
+      auth: '/api/auth/*',
+      problems: '/api/problems/*'
+    }
+  });
+});
+
+// Auth endpoints
+app.post('/api/auth/register', async (req, res) => {
+  try {
+    const { email, password, name } = req.body;
+    
+    if (!email || !password || !name) {
+      return res.status(400).json({
+        error: 'Validation failed',
+        details: 'Email, password, and name are required'
+      });
+    }
+    
+    // Check if user already exists
+    const existingUser = users.find(u => u.email === email);
+    if (existingUser) {
+      return res.status(409).json({
+        error: 'This email address is already registered. Please use a different email or try signing in instead.'
+      });
+    }
+    
+    // Hash password
+    const password_hash = await bcrypt.hash(password, 12);
+    
+    // Create user
+    const newUser = {
+      id: (users.length + 1).toString(),
+      email,
+      password_hash,
+      name,
+      role: 'user',
+      created_at: new Date().toISOString()
+    };
+    
+    users.push(newUser);
+    
+    // Generate tokens
+    const tokenPayload = {
+      userId: newUser.id,
+      email: newUser.email,
+      role: newUser.role
+    };
+    
+    const accessToken = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '7d' });
+    const refreshToken = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '30d' });
+    
+    res.status(201).json({
+      message: 'User registered successfully',
+      data: {
+        user: {
+          id: newUser.id,
+          email: newUser.email,
+          name: newUser.name,
+          role: newUser.role,
+          created_at: newUser.created_at
+        },
+        accessToken,
+        refreshToken
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    
+    if (!email || !password) {
+      return res.status(400).json({
+        error: 'Validation failed',
+        details: 'Email and password are required'
+      });
+    }
+    
+    // Find user
+    const user = users.find(u => u.email === email);
+    if (!user) {
+      return res.status(401).json({
+        error: 'Invalid credentials'
+      });
+    }
+    
+    // Verify password
+    const isValidPassword = await bcrypt.compare(password, user.password_hash);
+    if (!isValidPassword) {
+      return res.status(401).json({
+        error: 'Invalid credentials'
+      });
+    }
+    
+    // Generate tokens
+    const tokenPayload = {
+      userId: user.id,
+      email: user.email,
+      role: user.role
+    };
+    
+    const accessToken = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '7d' });
+    const refreshToken = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '30d' });
+    
+    res.json({
+      message: 'Login successful',
+      data: {
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          created_at: user.created_at
+        },
+        accessToken,
+        refreshToken
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Problems endpoints
+app.get('/api/problems', (req, res) => {
+  res.json({
+    message: 'Problems retrieved successfully',
+    data: problems
+  });
+});
+
+app.get('/api/problems/:id', (req, res) => {
+  const problem = problems.find(p => p.id === req.params.id);
+  if (!problem) {
+    return res.status(404).json({ error: 'Problem not found' });
+  }
+  
+  res.json({
+    message: 'Problem retrieved successfully',
+    data: problem
+  });
+});
+
+// Admin Problem Management Endpoints
+app.get('/api/admin/problems', authenticateAdmin, (req, res) => {
+  let filteredProblems = [...problems];
+  
+  // Search filter
+  const search = req.query.search;
+  if (search) {
+    filteredProblems = filteredProblems.filter(problem => 
+      problem.title.toLowerCase().includes(search.toLowerCase()) ||
+      problem.description.toLowerCase().includes(search.toLowerCase()) ||
+      problem.categories.some(cat => cat.toLowerCase().includes(search.toLowerCase()))
+    );
+  }
+  
+  // Status filter
+  const status = req.query.status;
+  if (status && status !== 'all') {
+    filteredProblems = filteredProblems.filter(problem => problem.status === status);
+  }
+  
+  // Add solution count to each problem
+  const problemsWithSolutionCount = filteredProblems.map(problem => ({
+    ...problem,
+    solutionCount: adminSolutions.filter(s => s.problem_id === problem.id).length
+  }));
+  
+  res.json({
+    message: 'Problems retrieved successfully',
+    data: problemsWithSolutionCount
+  });
+});
+
+app.get('/api/admin/problems/:id', authenticateAdmin, (req, res) => {
+  const problem = problems.find(p => p.id === req.params.id);
+  if (!problem) {
+    return res.status(404).json({ error: 'Problem not found' });
+  }
+  
+  // Get admin solutions for this problem
+  const solutions = adminSolutions.filter(s => s.problem_id === req.params.id);
+  
+  res.json({
+    message: 'Problem retrieved successfully',
+    data: {
+      ...problem,
+      adminSolutions: solutions
+    }
+  });
+});
+
+app.post('/api/admin/problems', authenticateAdmin, (req, res) => {
+  try {
+    const problemData = {
+      id: (problems.length + 1).toString(),
+      ...req.body,
+      created_by: req.user.id,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+    
+    problems.push(problemData);
+    res.status(201).json({
+      message: 'Problem created successfully',
+      data: problemData
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to create problem' });
+  }
+});
+
+app.put('/api/admin/problems/:id', authenticateAdmin, (req, res) => {
+  try {
+    const { id } = req.params;
+    const problemIndex = problems.findIndex(p => p.id === id);
+    
+    if (problemIndex === -1) {
+      res.status(404).json({ error: 'Problem not found' });
+      return;
+    }
+    
+    problems[problemIndex] = {
+      ...problems[problemIndex],
+      ...req.body,
+      updated_at: new Date().toISOString()
+    };
+    
+    res.json({
+      message: 'Problem updated successfully',
+      data: problems[problemIndex]
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update problem' });
+  }
+});
+
+app.delete('/api/admin/problems/:id', authenticateAdmin, (req, res) => {
+  try {
+    const { id } = req.params;
+    const problemIndex = problems.findIndex(p => p.id === id);
+    
+    if (problemIndex === -1) {
+      res.status(404).json({ error: 'Problem not found' });
+      return;
+    }
+    
+    problems.splice(problemIndex, 1);
+    res.json({ message: 'Problem deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete problem' });
+  }
+});
+
+app.patch('/api/admin/problems/:id/status', authenticateAdmin, (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    
+    if (!['draft', 'published', 'archived'].includes(status)) {
+      res.status(400).json({ error: 'Invalid status. Must be draft, published, or archived' });
+      return;
+    }
+    
+    const problemIndex = problems.findIndex(p => p.id === id);
+    
+    if (problemIndex === -1) {
+      res.status(404).json({ error: 'Problem not found' });
+      return;
+    }
+    
+    problems[problemIndex] = {
+      ...problems[problemIndex],
+      status,
+      published_at: status === 'published' ? new Date().toISOString() : null,
+      updated_at: new Date().toISOString()
+    };
+    
+    res.json({
+      message: `Problem ${status} successfully`,
+      data: problems[problemIndex]
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update problem status' });
+  }
+});
+
+// Admin Solution Management Endpoints
+app.get('/api/admin/problems/:problemId/solutions', authenticateAdmin, (req, res) => {
+  const solutions = adminSolutions.filter(s => s.problem_id === req.params.problemId);
+  
+  res.json({
+    message: 'Solutions retrieved successfully',
+    data: solutions
+  });
+});
+
+app.post('/api/admin/problems/:problemId/solutions', authenticateAdmin, (req, res) => {
+  try {
+    const solutionData = {
+      id: (adminSolutions.length + 1).toString(),
+      problem_id: req.params.problemId,
+      ...req.body,
+      created_by: req.user.id,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+    
+    adminSolutions.push(solutionData);
+    res.status(201).json({
+      message: 'Solution created successfully',
+      data: solutionData
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to create solution' });
+  }
+});
+
+app.put('/api/admin/solutions/:id', authenticateAdmin, (req, res) => {
+  try {
+    const { id } = req.params;
+    const solutionIndex = adminSolutions.findIndex(s => s.id === id);
+    
+    if (solutionIndex === -1) {
+      res.status(404).json({ error: 'Solution not found' });
+      return;
+    }
+    
+    adminSolutions[solutionIndex] = {
+      ...adminSolutions[solutionIndex],
+      ...req.body,
+      updated_at: new Date().toISOString()
+    };
+    
+    res.json({
+      message: 'Solution updated successfully',
+      data: adminSolutions[solutionIndex]
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update solution' });
+  }
+});
+
+app.delete('/api/admin/solutions/:id', authenticateAdmin, (req, res) => {
+  try {
+    const { id } = req.params;
+    const solutionIndex = adminSolutions.findIndex(s => s.id === id);
+    
+    if (solutionIndex === -1) {
+      res.status(404).json({ error: 'Solution not found' });
+      return;
+    }
+    
+    adminSolutions.splice(solutionIndex, 1);
+    res.json({ message: 'Solution deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete solution' });
+  }
+});
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({
+    error: 'Route not found',
+    path: req.originalUrl,
+    method: req.method
+  });
+});
+
+// Start server
+app.listen(PORT, () => {
+  console.log(`✅ Backend API Demo Server running on port ${PORT}`);
+  console.log(`🔗 Health check: http://localhost:${PORT}/health`);
+  console.log(`🧪 Test endpoint: http://localhost:${PORT}/test`);
+  console.log(`🔐 Auth API: http://localhost:${PORT}/api/auth/*`);
+  console.log(`📚 Problems API: http://localhost:${PORT}/api/problems/*`);
+  console.log(`👑 Admin API: http://localhost:${PORT}/api/admin/*`);
+  console.log(`📝 Demo Features:`);
+  console.log(`   - User registration and login`);
+  console.log(`   - JWT token authentication`);
+  console.log(`   - Password hashing with bcrypt`);
+  console.log(`   - Problem management`);
+  console.log(`   - Admin problem CRUD operations`);
+  console.log(`   - Admin solution management`);
+  console.log(`   - CORS enabled`);
+});
+
+// Graceful shutdown
+process.on('SIGINT', () => {
+  console.log('\n👋 Shutting down Backend API Demo Server...');
+  process.exit(0);
+});

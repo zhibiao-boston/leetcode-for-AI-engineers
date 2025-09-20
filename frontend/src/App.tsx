@@ -165,13 +165,15 @@ function App() {
           <ProblemProvider>
             <NotificationProvider>
               <Router>
-                <div className="min-h-screen transition-colors duration-200">
+                <div className="min-h-screen max-h-screen overflow-hidden flex flex-col transition-colors duration-200">
                   <Header />
-                  <Routes>
-                    <Route path="/admin" element={<AdminDashboard />} />
-                    <Route path="/profile" element={<UserProfilePage />} />
-                    <Route path="/" element={<HomePage />} />
-                  </Routes>
+                  <div className="flex-1 overflow-auto custom-scrollbar">
+                    <Routes>
+                      <Route path="/admin" element={<AdminDashboard />} />
+                      <Route path="/profile" element={<UserProfilePage />} />
+                      <Route path="/" element={<HomePage />} />
+                    </Routes>
+                  </div>
                 </div>
               </Router>
             </NotificationProvider>
