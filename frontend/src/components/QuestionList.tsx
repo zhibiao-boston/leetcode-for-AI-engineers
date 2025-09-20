@@ -17,7 +17,7 @@ const QuestionList: React.FC<QuestionListProps> = ({
       {/* Removed filter section - showing only generated ML/AI problems */}
 
       {/* Question Table */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto custom-scrollbar">
         <table className="w-full">
           <thead className="dark:bg-gray-800 bg-gray-50 sticky top-0">
             <tr>

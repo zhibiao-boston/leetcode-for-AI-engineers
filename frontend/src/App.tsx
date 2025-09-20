@@ -1,7 +1,7 @@
 // Import error suppression utility first to ensure it's active before any components load
 import './utils/errorSuppression';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Question } from './data/questions';
 import { AuthProvider } from './contexts/AuthContext';
@@ -20,6 +20,10 @@ const HomePage: React.FC = () => {
   const { problems, isLoading, error, refreshProblems } = useProblems();
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
   const [isQuestionListVisible, setIsQuestionListVisible] = useState(true);
+  
+  // Resizable main layout state
+  const [mainLeftWidth, setMainLeftWidth] = useState(40); // Default 40% for question list
+  const [isMainDragging, setIsMainDragging] = useState(false);
 
   // Set question from URL only, don't auto-select when navigating to home
   useEffect(() => {
@@ -86,14 +90,49 @@ const HomePage: React.FC = () => {
     setIsQuestionListVisible(!isQuestionListVisible);
   };
 
+  // Drag handler for main layout resizable divider
+  const handleMainMouseDown = useCallback((e: React.MouseEvent) => {
+    if (!isQuestionListVisible) return; // Only allow resize when list is visible
+    
+    setIsMainDragging(true);
+    const startX = e.clientX;
+    const startWidth = mainLeftWidth;
+    
+    const handleMouseMove = (e: MouseEvent) => {
+      const container = document.querySelector('.main-layout-container');
+      if (!container) return;
+      
+      const containerRect = container.getBoundingClientRect();
+      const deltaX = e.clientX - startX;
+      const deltaPercent = (deltaX / containerRect.width) * 100;
+      const newLeftWidth = Math.min(Math.max(startWidth + deltaPercent, 20), 70); // Limit between 20% and 70%
+      
+      setMainLeftWidth(newLeftWidth);
+    };
+    
+    const handleMouseUp = () => {
+      setIsMainDragging(false);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+    
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  }, [mainLeftWidth, isQuestionListVisible]);
+
   return (
-    <div className="flex h-screen pt-16 dark:bg-gray-900 bg-white dark:text-white text-gray-900 transition-colors duration-200">
+    <div className="flex min-h-screen pt-16 dark:bg-gray-900 bg-white dark:text-white text-gray-900 transition-colors duration-200 main-layout-container">
       {/* Question List - Collapsible */}
-      <div className={`transition-all duration-300 ease-in-out ${
-        isQuestionListVisible 
-          ? 'w-2/5 border-r dark:border-gray-700 border-gray-200' 
-          : 'w-0 overflow-hidden'
-      }`}>
+      <div 
+        className={`transition-all duration-300 ease-in-out section-with-guides ${
+          isQuestionListVisible 
+            ? 'border-r dark:border-gray-700 border-gray-200' 
+            : 'w-0 overflow-hidden'
+        }`}
+        style={{ 
+          width: isQuestionListVisible ? `${mainLeftWidth}%` : '0%' 
+        }}
+      >
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
             <div className="dark:text-gray-400 text-gray-600">Loading problems...</div>
@@ -117,10 +156,27 @@ const HomePage: React.FC = () => {
         )}
       </div>
       
+      {/* Resizable Divider for Main Layout */}
+      {isQuestionListVisible && (
+        <div 
+          className={`cursor-col-resize flex-shrink-0 resizable-divider ${
+            isMainDragging ? 'dragging' : ''
+          }`}
+          onMouseDown={handleMainMouseDown}
+          title="Drag to resize question list and details panels"
+          style={{ width: '2px' }}
+        />
+      )}
+      
       {/* Question Details - Full width when list is hidden */}
-      <div className={`transition-all duration-300 ease-in-out ${
-        isQuestionListVisible ? 'w-3/5' : 'w-full'
-      }`}>
+      <div 
+        className={`transition-all duration-300 ease-in-out section-with-guides ${
+          isQuestionListVisible ? '' : 'w-full'
+        }`}
+        style={{ 
+          width: isQuestionListVisible ? `${100 - mainLeftWidth}%` : '100%' 
+        }}
+      >
         <QuestionDetails 
           question={selectedQuestion}
           onToggleQuestionList={toggleQuestionList}
@@ -165,9 +221,9 @@ function App() {
           <ProblemProvider>
             <NotificationProvider>
               <Router>
-                <div className="min-h-screen max-h-screen overflow-hidden flex flex-col transition-colors duration-200">
+                <div className="min-h-screen flex flex-col transition-colors duration-200 page-structure-guides">
                   <Header />
-                  <div className="flex-1 overflow-auto custom-scrollbar">
+                  <div className="flex-1 overflow-y-auto custom-scrollbar content-indent-guides">
                     <Routes>
                       <Route path="/admin" element={<AdminDashboard />} />
                       <Route path="/profile" element={<UserProfilePage />} />
